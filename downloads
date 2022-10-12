@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49925874-3"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-49925874-3');
+  </script>
+
+  <meta charset='utf-8'>
+  <meta content='IE=edge,chrome=1' http-equiv='X-UA-Compatible'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git - Downloads</title>
+
+  <link href='/favicon.ico' rel='shortcut icon' type='image/x-icon'>
+
+  <link rel="stylesheet" media="screen" href="/assets/application-cafcf280f67db0e6d8168ba98a38da878769a9d5f37793b68ffb963a02d185e0.css" />
+  <script src="/assets/modernize-b3ebe0c31c24f230dc62179d3e1030d2e57a53b1668d9382c0a27dbd44a94beb.js"></script>
+  <!--[if (gte IE 6)&(lte IE 8)]>
+  <script src="/javascripts/selectivizr-min.js"></script>
+  <![endif]-->
+
+</head>
+
+<body id="downloads">
+
+  <div class="inner">
+    <header>
+
+  <a href="/"><img src="/images/logo@2x.png" width="110" height="46" alt="Git" /></a>
+  <span id="tagline"></span>
+  <script type="text/javascript">
+    var taglines = ["fast-version-control","everything-is-local","distributed-even-if-your-workflow-isnt","local-branching-on-the-cheap","distributed-is-the-new-centralized"];
+    var tagline = taglines[Math.floor(Math.random() * taglines.length)];
+    document.getElementById('tagline').innerHTML = '--' + tagline;
+  </script>
+  <form id="search" action="/search/results">
+    <input id="search-text" name="search" placeholder="Search entire site..." autocomplete="off" type="text" />
+  </form>
+  <div id="search-results"></div>
+
+</header>
+
+  </div> <!-- .inner -->
+
+    <div class="inner">
+      <div id="content-wrapper">
+        <button class="sidebar-btn"></button>
+<aside class="sidebar" id="sidebar">
+  <nav>
+    <ul>
+      <li>
+        <a href="/about">About</a>
+        <ul class="">
+          <li>
+            <a href="/about">Branching and Merging</a>
+          </li>
+          <li>
+            <a href="/about/small-and-fast">Small and Fast</a>
+          </li>
+          <li>
+            <a href="/about/distributed">Distributed</a>
+          </li>
+          <li>
+            <a href="/about/info-assurance">Data Assurance</a>
+          </li>
+          <li>
+            <a href="/about/staging-area">Staging Area</a>
+          </li>
+          <li>
+            <a href="/about/free-and-open-source">Free and Open Source</a>
+          </li>
+          <li>
+            <a href="/about/trademark">Trademark</a>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <a href="/doc">Documentation</a>
+        <ul class="">
+          <li>
+            <a href="/docs">Reference</a>
+          </li>
+          <li>
+            <a href="/book">Book</a>
+          </li>
+          <li>
+            <a href="/videos">Videos</a>
+          </li>
+          <li>
+            <a href="/doc/ext">External Links</a>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <a class="active" href="/downloads">Downloads</a>
+        <ul class="expanded">
+          <li>
+            <a href="/downloads/guis">GUI Clients</a>
+          </li>
+          <li>
+            <a href="/downloads/logos">Logos</a>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <a href="/community">Community</a>
+      </li>
+    </ul>
+      <hr class="sidebar">
+        <div class="callout">
+  <p>The entire <strong><a href="/book">Pro Git book</a></strong> written
+  by Scott Chacon and Ben Straub is available to <a href="/book">read online for free</a>.
+  Dead tree versions are available on <a href="http://www.amazon.com/Pro-Git-Scott-Chacon/dp/1484200772?ie=UTF8&camp=1789&creative=9325&creativeASIN=1430218339&linkCode=as2&tag=git-sfconservancy-20">Amazon.com</a>.
+  </p>
+</div>
+
+
+  </nav>
+</aside>
+
+        <div id="content">
+          
+
+<div id="main">
+  <div class="two-column">
+    <div class="column-left">
+      <h1>Downloads</h1>
+      <div class="callout">
+        <table class="binaries">
+          <tr>
+            <td>
+              <a class="icon mac" href="/download/mac">macOS</a>
+            </td>
+            <td>
+              <a class="icon windows" href="/download/win">Windows</a>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a class="icon linux" href="/download/linux">Linux/Unix</a>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <p>
+        <a href="https://www.kernel.org/pub/software/scm/git/">Older releases</a> are available and the <a href="https://github.com/git/git">Git source repository</a> is on GitHub.
+      </p>
+    </div>
+    <div class="column-right">
+      <div class="monitor">
+
+  <h4> Latest source Release </h4>
+
+  <span class="version">
+    2.36.1
+  </span>
+
+  <a href="https://raw.github.com/git/git/master/Documentation/RelNotes/2.36.1.txt">Release Notes</a>
+  <span class="release-date">
+    (2022-05-05)
+  </span>
+  <span data-mac="2.33.0" data-win="2.36.1" id="installer-version"></span>
+
+  <a class="button" id="download-link" href="https://www.kernel.org/pub/software/scm/git/">Download Source Code</a>
+</div>
+
+    </div>
+  </div>
+  <div class="callout" id="more-downloads">
+    <div class="two-column">
+      <div class="column-left">
+        <h2>GUI Clients</h2>
+        <p>
+          Git comes with built-in GUI tools (<strong>git-gui</strong>, <strong>gitk</strong>), but there are several third-party tools for users looking for a platform-specific experience.
+        </p>
+        <p>
+          <strong>
+            <a href="/downloads/guis">View GUI Clients →</a>
+          </strong>
+        </p>
+      </div>
+      <div class="column-right">
+        <h2>Logos</h2>
+        <p>Various Git logos in PNG (bitmap) and EPS (vector) formats are available for use in online and print projects.</p>
+        <p>
+          <strong>
+            <a href="/downloads/logos">View Logos →</a>
+          </strong>
+        </p>
+      </div>
+    </div>
+  </div>
+  <h2>Git via Git</h2>
+  <p>
+    If you already have Git installed, you can get the latest development version via Git itself:
+  </p>
+  <code>
+    git clone https://github.com/git/git
+  </code>
+  <p>
+    You can also always browse the current contents of the git repository using the <a href="https://github.com/git/git">web interface</a>.
+  </p>
+</div>
+
+        </div>
+      </div>
+      <footer>
+  <div class="site-source">
+    <a href="/site">About this site</a><br>
+    Patches, suggestions, and comments are welcome.
+  </div>
+  <div class="sfc-member">
+    Git is a member of <a href="/sfc">Software Freedom Conservancy</a>
+  </div>
+</footer>
+<a href="#top" class="no-js scrollToTop" id="scrollToTop" data-label="Scroll to top">
+  <img src="/images/icons/chevron-up@2x.png" width="20" height="20" alt="scroll-to-top"/>
+</a>
+<script src="/assets/application-38b0d42ff05ffea45841edebbd14b75b89585646153808e82907c2c5c11f324b.js"></script>
+
+    </div>
+
+</body>
+</html>
