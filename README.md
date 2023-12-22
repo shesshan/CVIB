@@ -1,7 +1,7 @@
 # CVIB
 This repo contains the PyTorch implementation for our paper:
 
-**[Contrastive Variational Information Bottleneck for Aspect-based Sentiment Analysis]<https://www.sciencedirect.com/science/article/pii/S095070512301050X/pdfft?md5=5f85969d1933e1db0abbdaabea2365cd&pid=1-s2.0-S095070512301050X-main.pdf>**
+**[Contrastive Variational Information Bottleneck for Aspect-based Sentiment Analysis](https://www.sciencedirect.com/science/article/pii/S095070512301050X/pdfft?md5=5f85969d1933e1db0abbdaabea2365cd&pid=1-s2.0-S095070512301050X-main.pdf)**
 
 Mingshan Chang, Min Yang, Qingshan Jiang, Ruifeng Xu. *Knowledge-Based Systems, 2024: 111302.*
 
