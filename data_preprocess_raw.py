@@ -12,10 +12,10 @@ from lxml import etree
 from nltk.tokenize import TreebankWordTokenizer
 from tqdm import tqdm
 
-PARSER_PATH = 'model.tar'
-MODELS_DIR = '/data1/mschang/pretrained-models'
-MODEL_PATH = os.path.join(
-    MODELS_DIR, PARSER_PATH)
+PARSER_PATH = 'biaffine-dependency-parser-ptb-2020.04.06'
+
+MODELS_DIR = './parser/'
+MODEL_PATH = os.path.join(MODELS_DIR, PARSER_PATH)
 
 
 def parse_args():
@@ -24,9 +24,9 @@ def parse_args():
     # Required parameters
     parser.add_argument('--model_path', type=str, default=MODEL_PATH,
                         help='Path to biaffine dependency parser.')
-    parser.add_argument('--data_path', type=str, default='/data1/mschang/ABSA/data',
-                        help='Directory of where SemEval or twiiter or MAMS data held.')
-    parser.add_argument('--dataset', type=str, default='twitter',
+    parser.add_argument('--data_path', type=str, default='./ABSA_RGAT/',
+                        help='Directory of data with .raw format.')
+    parser.add_argument('--dataset', type=str, default='semeval15', choices=['semeval15', 'semeval16'],
                         help='Dataset to preprocess.')
     return parser.parse_args()
 
@@ -64,9 +64,9 @@ def read_file(file_name):
 
 def get_sentence(text, aspect, sentiment):
     sentence = dict()
-    sentence['sentence'] = text.replace('$T$', aspect)
+    sentence['sentence'] = text.replace('TT', aspect)
     sentence['aspect_sentiment'] = [[aspect, sentiment_map[int(sentiment)]]]
-    frm = text.split().index('$T$')
+    frm = text.split().index('TT')
     to = frm + len(aspect.split())
     sentence['from_to'] = [[frm, to]]
     return sentence
