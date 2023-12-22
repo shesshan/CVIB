@@ -1,7 +1,8 @@
 # CVIB
 This repo contains the PyTorch implementation for our paper:
 
-**Contrastive Variational Information Bottleneck for Aspect-based Sentiment Analysis<https://www.sciencedirect.com/science/article/pii/S095070512301050X/pdfft?md5=5f85969d1933e1db0abbdaabea2365cd&pid=1-s2.0-S095070512301050X-main.pdf>**
+**[Contrastive Variational Information Bottleneck for Aspect-based Sentiment Analysis]<https://www.sciencedirect.com/science/article/pii/S095070512301050X/pdfft?md5=5f85969d1933e1db0abbdaabea2365cd&pid=1-s2.0-S095070512301050X-main.pdf>**
+
 Mingshan Chang, Min Yang, Qingshan Jiang, Ruifeng Xu. *Knowledge-Based Systems, 2024: 111302.*
 
 Please cite our paper and kindly give a star for this repo if you use the code.
@@ -27,6 +28,7 @@ The codes for data preprocessing are in `data_preprocess_raw.py` (for REST15, RE
 Run the commands: ` bash train_xxx.sh `.  (For example, run `bash train_res14.sh` to train the model with REST14 dataset.)
 
 ## Citation
+The BibTex of the citation is as follow:
 ```
 @article{CHANG2024111302,
 title = {Contrastive variational information bottleneck for aspect-based sentiment analysis},
