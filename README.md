@@ -29,7 +29,7 @@ Run the commands: ` bash train_xxx.sh `.  (For example, run `bash train_res14.sh
 
 ## Citation
 The BibTex of the citation is as follow:
-```
+```json
 @article{CHANG2024111302,
 title = {Contrastive variational information bottleneck for aspect-based sentiment analysis},
 author = {Mingshan Chang and Min Yang and Qingshan Jiang and Ruifeng Xu},
