@@ -99,9 +99,6 @@ def get_dataset(args):
         data_root_dir,
         'enriched' if 'ALL' in args.arts_set else 'ARTS_' + args.arts_set)
 
-    twitter_train = '{}/twitter/train_biaffine.json'.format(data_root_dir)
-    twitter_test = '{}/twitter/test_biaffine.json'.format(data_root_dir)
-
     rest15_train = '{}/semeval15/train_biaffine.json'.format(data_root_dir)
     rest15_test = '{}/semeval15/test_biaffine.json'.format(data_root_dir)
 
@@ -114,7 +111,6 @@ def get_dataset(args):
     ds_train = {
         'rest14': rest_train,
         'lap14': laptop_train,
-        'twitter': twitter_train,
         'rest15': rest15_train,
         'rest16': rest16_train,
         'mams': mams_train
@@ -123,7 +119,6 @@ def get_dataset(args):
     ds_test = {
         'rest14': (rest_test_arts if args.arts_test else rest_test),
         'lap14': (laptop_test_arts if args.arts_test else laptop_test),
-        'twitter': twitter_test,
         'rest15': rest15_test,
         'rest16': rest16_test,
         'mams': mams_test
