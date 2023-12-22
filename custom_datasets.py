@@ -85,8 +85,9 @@ def get_dataset(args):
         data_root_dir)
     rest_test = '{}/semeval14/Restaurants_Test_Gold_biaffine_depparsed_with_energy.json'.format(
         data_root_dir)
-    rest_test_arts = '{}/semeval14/rest_test_enriched_biaffine_depparsed_arts.json'.format(
-        data_root_dir)
+    rest_test_arts = '{}/semeval14/rest_test_{}_biaffine_depparsed_arts.json'.format(
+        data_root_dir,
+        'enriched' if 'ALL' in args.arts_set else 'ARTS_' + args.arts_set)
     rest_test_case_study = '{}/semeval14/Restaurants_Test_Case_Study.json'.format(
         data_root_dir)
 
@@ -94,8 +95,9 @@ def get_dataset(args):
         data_root_dir)
     laptop_test = '{}/semeval14/Laptops_Test_Gold_biaffine_depparsed.json'.format(
         data_root_dir)
-    laptop_test_arts = '{}/semeval14/laptop_test_enriched_biaffine_depparsed_arts.json'.format(
-        data_root_dir)
+    laptop_test_arts = '{}/semeval14/laptop_test_{}_biaffine_depparsed_arts.json'.format(
+        data_root_dir,
+        'enriched' if 'ALL' in args.arts_set else 'ARTS_' + args.arts_set)
 
     twitter_train = '{}/twitter/train_biaffine.json'.format(data_root_dir)
     twitter_test = '{}/twitter/test_biaffine.json'.format(data_root_dir)
@@ -119,23 +121,24 @@ def get_dataset(args):
     }
 
     ds_test = {
-        'rest14': (rest_test if not args.arts_test else rest_test_arts),
-        'lap14': (laptop_test if not args.arts_test else laptop_test_arts),
+        'rest14': (rest_test_arts if args.arts_test else rest_test),
+        'lap14': (laptop_test_arts if args.arts_test else laptop_test),
         'twitter': twitter_test,
         'rest15': rest15_test,
         'rest16': rest16_test,
         'mams': mams_test
     }
 
-    if args.case_study:
-        ds_test['rest14'] = rest_test_case_study
+    # if args.case_study:
+    #     ds_test['rest14'] = rest_test_case_study
 
     train = list(read_sentence_depparsed(ds_train[source_domain]))
     logger.info('# Read %s Train set: %d', source_domain, len(train))
-    if args.arts_test:
-        logger.info('################## Load ARTS test set ##################')
+
     test = list(read_sentence_depparsed(ds_test[target_domain]))
-    logger.info("# Read %s Test set: %d", target_domain, len(test))
+    logger.info("# Read {} Test set: {}".format(
+        'ARTS-' + args.arts_set if args.arts_test else target_domain,
+        len(test)))
 
     return train, test
 
@@ -548,13 +551,9 @@ def load_and_cache_vocabs(data, args):
     Build vocabulary of words, part of speech tags, dependency tags and cache them.
     Load glove embedding if needed.
     '''
-    # pkls_path = os.path.join(
-    #     str(args.output_dir) + '-' + str(args.target_domain), 'pkls')
     pkls_path = '{}/{}-{}-pkls/'.format(
         args.data_root_dir, args.source_domain,
         args.target_domain + '-arts' if args.arts_test else args.target_domain)
-    # if args.arts_test:
-    #     pkls_path = os.path.join(str(args.output_dir) + '-arts', 'pkls')
 
     if not os.path.exists(pkls_path):
         os.makedirs(pkls_path)
@@ -838,15 +837,6 @@ class ASBA_Depparsed_Dataset(Dataset):
             items_tensor = e['sentence_ids'], e['aspect_ids']
             items_tensor += tuple(torch.tensor(t) for t in items)
         else:  # BERT-based Models
-            # if self.args.pure_bert or self.args.capsnet_bert:
-            #     bert_items = e['input_ids'], e['input_cat_ids'], e[
-            #         'segment_ids']
-            #     items_tensor = tuple(torch.tensor(t) for t in bert_items)
-            #     items_tensor += tuple(torch.tensor(t) for t in items)
-            # elif self.args.gat_bert:
-            #     bert_items = e['input_ids'], e['word_indexer'], e[
-            #         'input_aspect_ids'], e['aspect_indexer'], e[
-            #             'input_cat_ids'], e['segment_ids']
             bert_items = e['input_ids'], e['input_cat_ids'], e[
                 'segment_ids'], e['word_indexer'], e['input_aspect_ids'], e[
                     'aspect_indexer']
@@ -863,7 +853,6 @@ class ASBA_Depparsed_Dataset(Dataset):
         cls_token = "[CLS]"
         sep_token = "[SEP]"
         pad_token = 0
-        # tokenizer = self.args.tokenizer
 
         tokens = []
         word_indexer = []
@@ -933,7 +922,7 @@ class ASBA_Depparsed_Dataset(Dataset):
             elif self.args.embedding_type == 'elmo':
                 self.data[i]['sentence_ids'] = self.data[i]['sentence']
                 self.data[i]['aspect_ids'] = self.data[i]['aspect']
-            else:  # self.args.embedding_type == 'bert'
+            elif self.args.embedding_type == 'bert':
                 self.convert_features_bert(i)
 
             self.data[i]['text_len'] = len(self.data[i]['sentence'])
@@ -1181,7 +1170,7 @@ def my_collate_case_study(batch):
     return input_ids, word_indexer, input_aspect_ids, aspect_indexer, input_cat_ids, segment_ids, dep_tag_ids, pos_class, text_len, aspect_len, sentiment, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids, sentence
 
 
-# 2023.10.28 add
+# ABSA Dataset for GNN-based Models
 class ABSADataset_from_Raw(Dataset):
 
     def __init__(self, args, do_train=True):
@@ -1279,8 +1268,7 @@ class ABSADataset_from_Raw(Dataset):
                           padding='post',
                           truncating='post',
                           value=0):
-        x = (np.zeros(maxlen) * value).astype(
-            dtype)
+        x = (np.zeros(maxlen) * value).astype(dtype)
         if truncating == 'pre':
             trunc = sequence[-maxlen:]
         else:
