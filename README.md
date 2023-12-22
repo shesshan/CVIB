@@ -1,5 +1,5 @@
 # CVIB
-This repo contains the PyTorch implementation for the paper **"Contrastive Variational Information Bottleneck for Aspect-based Sentiment Analysis"** (KBS 2023).
+This repo contains the PyTorch implementation for the paper ***Contrastive Variational Information Bottleneck for Aspect-based Sentiment Analysis*** (KBS 2023).
 
 ## Requirements
 - Python 3.9.7
