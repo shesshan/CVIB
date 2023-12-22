@@ -13,12 +13,12 @@ from lxml import etree
 from nltk.tokenize import TreebankWordTokenizer
 from tqdm import tqdm
 
-#PARSER_PATH = 'biaffine-dependency-parser-ptb-2020.04.06.tar.gz'
-PARSER_PATH = 'model.tar'
+PARSER_PATH = 'biaffine-dependency-parser-ptb-2020.04.06'
+# PARSER_PATH = 'model.tar.gz'
 
-MODELS_DIR = '/data1/mschang/pretrained-models'
-MODEL_PATH = os.path.join(
-    MODELS_DIR, PARSER_PATH)
+MODELS_DIR = './parser/'
+MODEL_PATH = os.path.join(MODELS_DIR, PARSER_PATH)
+
 
 def xml2txt(file_path):
     '''
@@ -39,7 +39,7 @@ def xml2txt(file_path):
                 sent_list.append(sent)
     with open(output, 'w') as f:
         for s in sent_list:
-            f.write(s+'\n')
+            f.write(s + '\n')
     print('processed', len(sent_list), 'of', file_path)
 
 
@@ -48,21 +48,22 @@ def json2txt(file_path):
     Read the original json file of semeval data and extract the text that have aspect terms.
     Store them in txt file.
     '''
-    output = file_path.replace('.json', '_text_arts.txt')
     sent_list = []
+    # adv1_list, adv2_list, adv3_list = [], [], []
     with open(file_path) as f:
         raw = json.load(f)  # dict
-        for _, v in raw.items():
+        for k, v in raw.items():
             sent = v['sentence']
             term = v['term']
             if term is None:
                 continue
             if term:
                 sent_list.append(sent)
+    output = file_path.replace('.json', '.txt')
     with open(output, 'w') as f:
         for s in sent_list:
-            f.write(s+'\n')
-    print('processed', len(sent_list), 'of', file_path)
+            f.write(s + '\n')
+    print('ARTS {}: {} --> file: {}'.format(file_path.split('_')[-1].split('.')[0], len(sent_list), file_path))
 
 
 def text2docs(file_path, predictor):
@@ -94,8 +95,8 @@ def dependencies2format(doc):  # doc.sentences[i]
     # sentence['energy'] = doc['energy']
     predicted_dependencies = doc['predicted_dependencies']
     predicted_heads = doc['predicted_heads']
-    sentence['predicted_dependencies'] = doc['predicted_dependencies']
-    sentence['predicted_heads'] = doc['predicted_heads']
+    sentence['predicted_dependencies'] = predicted_dependencies
+    sentence['predicted_heads'] = predicted_heads
     sentence['dependencies'] = []
     for idx, item in enumerate(predicted_dependencies):
         dep_tag = item
@@ -108,7 +109,7 @@ def dependencies2format(doc):  # doc.sentences[i]
 
 def get_dependencies(file_path, predictor):
     docs = text2docs(file_path, predictor)
-    sentences = [dependencies2format(doc) for doc in docs]
+    sentences = [dependencies2format(doc) for doc in docs]  # list of dict
     return sentences
 
 
@@ -130,7 +131,8 @@ def syntaxInfo2json(sentences, origin_file):
 
             example['tokens'] = sentences[idx]['tokens']
             example['tags'] = sentences[idx]['tags']
-            example['predicted_dependencies'] = sentences[idx]['predicted_dependencies']
+            example['predicted_dependencies'] = sentences[idx][
+                'predicted_dependencies']
             example['predicted_heads'] = sentences[idx]['predicted_heads']
             example['dependencies'] = sentences[idx]['dependencies']
             # example['energy'] = sentences[idx]['energy']
@@ -149,10 +151,10 @@ def syntaxInfo2json(sentences, origin_file):
                 left_index = int(c.attrib['from'])
                 right_index = int(c.attrib['to'])
 
-                left_word_offset = len(tk.tokenize(
-                    example['sentence'][:left_index]))
-                to_word_offset = len(tk.tokenize(
-                    example['sentence'][:right_index]))
+                left_word_offset = len(
+                    tk.tokenize(example['sentence'][:left_index]))
+                to_word_offset = len(
+                    tk.tokenize(example['sentence'][:right_index]))
 
                 example['from_to'].append((left_word_offset, to_word_offset))
             if len(example['aspect_sentiment']) == 0:
@@ -185,7 +187,8 @@ def syntaxInfo2json_arts(sentences, origin_file):
 
             example['tokens'] = sentences[idx]['tokens']
             example['tags'] = sentences[idx]['tags']
-            example['predicted_dependencies'] = sentences[idx]['predicted_dependencies']
+            example['predicted_dependencies'] = sentences[idx][
+                'predicted_dependencies']
             example['predicted_heads'] = sentences[idx]['predicted_heads']
             example['dependencies'] = sentences[idx]['dependencies']
             # example['energy'] = sentences[idx]['energy']
@@ -196,17 +199,16 @@ def syntaxInfo2json_arts(sentences, origin_file):
             if v['polarity'] == 'conflict':
                 continue
             target = v['term']
-            example['aspect_sentiment'].append(
-                    (target, v['polarity']))
+            example['aspect_sentiment'].append((target, v['polarity']))
 
             # index in strings, we want index in tokens
             left_index = int(v['from'])
             right_index = int(v['to'])
 
-            left_word_offset = len(tk.tokenize(
-                    example['sentence'][:left_index]))
+            left_word_offset = len(
+                tk.tokenize(example['sentence'][:left_index]))
             to_word_offset = len(tk.tokenize(
-                    example['sentence'][:right_index]))
+                example['sentence'][:right_index]))
 
             example['from_to'].append((left_word_offset, to_word_offset))
             if len(example['aspect_sentiment']) == 0:
@@ -214,7 +216,8 @@ def syntaxInfo2json_arts(sentences, origin_file):
                 continue
             json_data.append(example)
             idx += 1
-    extended_filename = origin_file.replace('.json', '_biaffine_depparsed_arts.json')
+    extended_filename = origin_file.replace('.json',
+                                            '_biaffine_depparsed_arts.json')
     with open(extended_filename, 'w') as f:
         json.dump(json_data, f)
     print('done', len(json_data))
@@ -226,9 +229,11 @@ def main():
 
     predictor = Predictor.from_path(args.model_path)
 
-    datasets = {'res14': ('Restaurants_Train_v2.xml', 'Restaurants_Test_Gold.xml'),
-                'lap14': ('Laptop_Train_v2.xml', 'Laptops_Test_Gold.xml'),
-                'mams': ('train.xml', 'test.xml', 'val.xml'), }
+    datasets = {
+        'res14': ('Restaurants_Train_v2.xml', 'Restaurants_Test_Gold.xml'),
+        'lap14': ('Laptop_Train_v2.xml', 'Laptops_Test_Gold.xml'),
+        'mams': ('train.xml', 'test.xml', 'val.xml'),
+    }
 
     data = datasets[args.dataset]
 
@@ -243,21 +248,21 @@ def main():
 
     # txt -> json
     train_sentences = get_dependencies(
-        os.path.join(args.data_path, train_file.replace('.xml', '_text.txt')), predictor)
-    test_sentences = get_dependencies(os.path.join(
-        args.data_path, test_file.replace('.xml', '_text.txt')), predictor)
+        os.path.join(args.data_path, train_file.replace('.xml', '_text.txt')),
+        predictor)
+    test_sentences = get_dependencies(
+        os.path.join(args.data_path, test_file.replace('.xml', '_text.txt')),
+        predictor)
 
-    syntaxInfo2json(train_sentences, os.path.join(
-        args.data_path, train_file))
-    syntaxInfo2json(test_sentences, os.path.join(
-        args.data_path, test_file))
+    syntaxInfo2json(train_sentences, os.path.join(args.data_path, train_file))
+    syntaxInfo2json(test_sentences, os.path.join(args.data_path, test_file))
 
     if val_file is not None:
         xml2txt(os.path.join(args.data_path, val_file))
-        val_sentences = get_dependencies(os.path.join(
-            args.data_path, val_file.replace('.xml', '_text.txt')), predictor)
-        syntaxInfo2json(val_sentences, os.path.join(
-            args.data_path, val_file))
+        val_sentences = get_dependencies(
+            os.path.join(args.data_path,
+                         val_file.replace('.xml', '_text.txt')), predictor)
+        syntaxInfo2json(val_sentences, os.path.join(args.data_path, val_file))
 
 
 def process_arts():
@@ -267,43 +272,76 @@ def process_arts():
 
     predictor = Predictor.from_path(args.model_path)
 
-    datasets = {'lap14': 'laptop_test_enriched.json',
-                'res14': 'rest_test_enriched.json'}
+    datasets = {
+        'lap14': 'laptop_test_ARTS_{}.json'.format(args.arts_set),
+        'res14': 'rest_test_ARTS_{}.json'.format(args.arts_set)
+    }
 
     file_name = datasets[args.dataset]
 
     test_file_path = os.path.join(args.data_path, file_name)
 
-    json2txt(test_file_path)
+    json2txt(test_file_path)  # list of sentences
 
-    test_sentences = get_dependencies(os.path.join(
-        args.data_path, file_name.replace('.json', '_text_arts.txt')), predictor)
+    test_sentences = get_dependencies(
+        os.path.join(args.data_path,
+                     file_name.replace('.json', '.txt')), predictor)
 
     syntaxInfo2json_arts(test_sentences, test_file_path)
+
+
+def split_arts_set(data_file):
+    adv1, adv2, adv3 = {}, {}, {}
+    with open(data_file) as f:
+        raw = json.load(f)  # dict of dict
+        for k, v in raw.items():
+            term = v['term']
+            if term is None:
+                continue
+            if term:
+                if 'adv1' in k:
+                    adv1[k]=v
+                elif 'adv2' in k:
+                    adv2[k]=v
+                elif 'adv3' in k:
+                    adv3[k]=v
+    write_to_json(data_file.replace('ALL', 'REVTGT'), adv1)
+    write_to_json(data_file.replace('ALL', 'REVNON'), adv2)
+    write_to_json(data_file.replace('ALL', 'ADDDIFF'), adv3)
+
+def write_to_json(data_path, data):
+    json_str = json.dumps(data)
+    with open(data_path, 'w') as json_file:
+        json_file.write(json_str)
+    json_file.close()
 
 def parse_args():
     parser = argparse.ArgumentParser()
 
     # Required parameters
-    parser.add_argument('--model_path', type=str, default=MODEL_PATH,
+    parser.add_argument('--model_path',
+                        type=str,
+                        default=MODEL_PATH,
                         help='Path to biaffine dependency parser.')
-    parser.add_argument('--data_path', type=str, default='/data1/mschang/ABSA/data/semeval14',
-                        help='Directory of where SemEval or twiiter or MAMS data held.')
-    parser.add_argument('--dataset', type=str, default='lap14',
+    parser.add_argument(
+        '--data_path',
+        type=str,
+        default='/ossfs/workspace/ABSA_RGAT/semeval14',
+        help='Directory of where SemEval (or twiiter, MAMS) data held.')
+    parser.add_argument('--dataset',
+                        type=str,
+                        default='lap14',
                         help='Dataset to preprocess.')
+    parser.add_argument('--arts_set',
+                        type=str,
+                        default='ALL',
+                        help='set of ARTS, ALL/REVTGT/REVNON/ADDDIFF.')
 
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    '''
-    tmp_path='./data/pretrained-models/tmp'
-    if not os.path.exists(tmp_path):
-        os.mkdir(tmp_path)
-    tempdir = os.path.join('./data/pretrained-models','tmp')
-    with tarfile.open(MODEL_PATH, "r:gz") as archive:
-            archive.extractall(tempdir)
-    '''
     
-    #main()
-    process_arts()
+    # main() # process raw data with xml format
+    process_arts() # process ARTS subsets
+
