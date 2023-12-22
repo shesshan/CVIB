@@ -20,6 +20,8 @@ from lxml import etree
 import nltk
 from nltk import word_tokenize, sent_tokenize
 
+nltk.download('./nltk_data/punkt')
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,27 +29,28 @@ def load_datasets_and_vocabs(args):
 
     train, test = get_dataset(args)  # read json files
 
-    # Our model takes unrolled data, currently we don't consider the MAMS cases(future experiments)
-    _, train_all_unrolled, _, _ = get_rolled_and_unrolled_data(
-        train, args)  # dict
+    # we take unrolled data, i.e. one sample for each aspect
+    _, train_all_unrolled, _, _ = get_rolled_and_unrolled_data(train,
+                                                               args)  # dict
     _, test_all_unrolled, _, _ = get_rolled_and_unrolled_data(test, args)
 
     logger.info('****** After unrolling ******')
     logger.info('Train set size: %s', len(train_all_unrolled))
     logger.info('Test set size: %s,', len(test_all_unrolled))
 
-    # Build word vocabulary(part of speech, dep_tag) and save pickles.
+    # Build word vocabulary (part of speech, dep_tag) and save pickles.
     word_vecs, word_vocab, dep_tag_vocab, pos_tag_vocab = load_and_cache_vocabs(
-        train_all_unrolled+test_all_unrolled, args)
+        train_all_unrolled + test_all_unrolled, args)
 
     if args.embedding_type == 'glove':
         embedding = torch.from_numpy(np.asarray(word_vecs, dtype=np.float32))
         args.glove_embedding = embedding
 
-    train_dataset = ASBA_Depparsed_Dataset(
-        train_all_unrolled, args, word_vocab, dep_tag_vocab, pos_tag_vocab)
-    test_dataset = ASBA_Depparsed_Dataset(
-        test_all_unrolled, args, word_vocab, dep_tag_vocab, pos_tag_vocab)
+    train_dataset = ASBA_Depparsed_Dataset(train_all_unrolled, args,
+                                           word_vocab, dep_tag_vocab,
+                                           pos_tag_vocab)
+    test_dataset = ASBA_Depparsed_Dataset(test_all_unrolled, args, word_vocab,
+                                          dep_tag_vocab, pos_tag_vocab)
 
     return train_dataset, test_dataset, word_vocab, dep_tag_vocab, pos_tag_vocab
 
@@ -76,55 +79,74 @@ def get_dataset(args):
     source_domain = args.source_domain
     target_domain = args.target_domain
 
-    rest_train = '/data1/mschang/ABSA/data/semeval14/Restaurants_Train_v2_biaffine_depparsed_with_energy.json'
-    rest_test = '/data1/mschang/ABSA/data/semeval14/Restaurants_Test_Gold_biaffine_depparsed_with_energy.json'
-    rest_test_arts = '/data1/mschang/ABSA/data/semeval14/rest_test_enriched_biaffine_depparsed_arts.json'
-    rest_test_case_study = '/data1/mschang/ABSA/data/semeval14/Restaurants_Test_Case_Study.json'
+    data_root_dir = args.data_root_dir
 
-    laptop_train = '/data1/mschang/ABSA/data/semeval14/Laptop_Train_v2_biaffine_depparsed.json'
-    laptop_test = '/data1/mschang/ABSA/data/semeval14/Laptops_Test_Gold_biaffine_depparsed.json'
-    laptop_test_arts = '/data1/mschang/ABSA/data/semeval14/laptop_test_enriched_biaffine_depparsed_arts.json'
+    rest_train = '{}/semeval14/Restaurants_Train_v2_biaffine_depparsed_with_energy.json'.format(
+        data_root_dir)
+    rest_test = '{}/semeval14/Restaurants_Test_Gold_biaffine_depparsed_with_energy.json'.format(
+        data_root_dir)
+    rest_test_arts = '{}/semeval14/rest_test_enriched_biaffine_depparsed_arts.json'.format(
+        data_root_dir)
+    rest_test_case_study = '{}/semeval14/Restaurants_Test_Case_Study.json'.format(
+        data_root_dir)
 
-    twitter_train = '/data1/mschang/ABSA/data/twitter/train_biaffine.json'
-    twitter_test = '/data1/mschang/ABSA/data/twitter/test_biaffine.json'
+    laptop_train = '{}/semeval14/Laptop_Train_v2_biaffine_depparsed.json'.format(
+        data_root_dir)
+    laptop_test = '{}/semeval14/Laptops_Test_Gold_biaffine_depparsed.json'.format(
+        data_root_dir)
+    laptop_test_arts = '{}/semeval14/laptop_test_enriched_biaffine_depparsed_arts.json'.format(
+        data_root_dir)
 
-    rest15_train = '/data1/mschang/ABSA/data/semeval15/train_biaffine.json'
-    rest15_test = '/data1/mschang/ABSA/data/semeval15/test_biaffine.json'
+    twitter_train = '{}/twitter/train_biaffine.json'.format(data_root_dir)
+    twitter_test = '{}/twitter/test_biaffine.json'.format(data_root_dir)
 
-    rest16_train = '/data1/mschang/ABSA/data/semeval16/train_biaffine.json'
-    rest16_test = '/data1/mschang/ABSA/data/semeval16/test_biaffine.json'
+    rest15_train = '{}/semeval15/train_biaffine.json'.format(data_root_dir)
+    rest15_test = '{}/semeval15/test_biaffine.json'.format(data_root_dir)
 
-    mams_train = '/data1/mschang/ABSA/data/mams/train_biaffine_depparsed.json'
-    mams_test = '/data1/mschang/ABSA/data/mams/test_biaffine_depparsed.json'
+    rest16_train = '{}/semeval16/train_biaffine.json'.format(data_root_dir)
+    rest16_test = '{}/semeval16/test_biaffine.json'.format(data_root_dir)
 
-    ds_train = {'rest': rest_train,
-                'laptop': laptop_train,
-                'twitter': twitter_train,
-                'rest15': rest15_train,
-                'rest16': rest16_train,
-                'mams': mams_train}
+    mams_train = '{}/mams/train_biaffine_depparsed.json'.format(data_root_dir)
+    mams_test = '{}/mams/test_biaffine_depparsed.json'.format(data_root_dir)
 
-    ds_test = {'rest': (rest_test if not args.arts_test else rest_test_arts),
-               'laptop': (laptop_test if not args.arts_test else laptop_test_arts),
-               'twitter': twitter_test,
-               'rest15': rest15_test,
-               'rest16': rest16_test,
-               'mams': mams_test}
+    ds_train = {
+        'rest14': rest_train,
+        'lap14': laptop_train,
+        'twitter': twitter_train,
+        'rest15': rest15_train,
+        'rest16': rest16_train,
+        'mams': mams_train
+    }
+
+    ds_test = {
+        'rest14': (rest_test if not args.arts_test else rest_test_arts),
+        'lap14': (laptop_test if not args.arts_test else laptop_test_arts),
+        'twitter': twitter_test,
+        'rest15': rest15_test,
+        'rest16': rest16_test,
+        'mams': mams_test
+    }
 
     if args.case_study:
-        ds_test['rest'] = rest_test_case_study
-    
+        ds_test['rest14'] = rest_test_case_study
+
     train = list(read_sentence_depparsed(ds_train[source_domain]))
     logger.info('# Read %s Train set: %d', source_domain, len(train))
     if args.arts_test:
-        logger.info('##### Load ARTS robustness test set #####')
+        logger.info('################## Load ARTS test set ##################')
     test = list(read_sentence_depparsed(ds_test[target_domain]))
     logger.info("# Read %s Test set: %d", target_domain, len(test))
 
     return train, test
 
 
-def reshape_dependency_tree_new(as_start, as_end, dependencies, multi_hop=False, add_non_connect=False, tokens=None, max_hop=5):
+def reshape_dependency_tree_new(as_start,
+                                as_end,
+                                dependencies,
+                                multi_hop=False,
+                                add_non_connect=False,
+                                tokens=None,
+                                max_hop=5):
     '''
     Adding multi hops
     This function is at the core of our algo, it reshape the dependency tree and center on the aspect.
@@ -142,8 +164,11 @@ def reshape_dependency_tree_new(as_start, as_end, dependencies, multi_hop=False,
         for dep in dependencies:
             if i == dep[1] - 1:
                 # not root, not aspect
-                if (dep[2] - 1 < as_start or dep[2] - 1 >= as_end) and dep[2] != 0 and dep[2] - 1 not in dep_idx:
-                    if str(dep[0]) != 'punct':  # and tokens[dep[2] - 1] not in stopWords
+                if (dep[2] - 1 < as_start or dep[2] - 1 >= as_end
+                    ) and dep[2] != 0 and dep[2] - 1 not in dep_idx:
+                    if str(
+                            dep[0]
+                    ) != 'punct':  # and tokens[dep[2] - 1] not in stopWords
                         dep_tag.append(dep[0])
                         dep_dir.append(1)
                     else:
@@ -152,8 +177,11 @@ def reshape_dependency_tree_new(as_start, as_end, dependencies, multi_hop=False,
                     dep_idx.append(dep[2] - 1)
             elif i == dep[2] - 1:
                 # not root, not aspect
-                if (dep[1] - 1 < as_start or dep[1] - 1 >= as_end) and dep[1] != 0 and dep[1] - 1 not in dep_idx:
-                    if str(dep[0]) != 'punct':  # and tokens[dep[1] - 1] not in stopWords
+                if (dep[1] - 1 < as_start or dep[1] - 1 >= as_end
+                    ) and dep[1] != 0 and dep[1] - 1 not in dep_idx:
+                    if str(
+                            dep[0]
+                    ) != 'punct':  # and tokens[dep[1] - 1] not in stopWords
                         dep_tag.append(dep[0])
                         dep_dir.append(2)
                     else:
@@ -171,10 +199,11 @@ def reshape_dependency_tree_new(as_start, as_end, dependencies, multi_hop=False,
                 for dep in dependencies:
                     if i == dep[1] - 1:
                         # not root, not aspect
-                        if (dep[2] - 1 < as_start or dep[2] - 1 >= as_end) and dep[2] != 0 and dep[2] - 1 not in dep_idx:
+                        if (dep[2] - 1 < as_start or dep[2] - 1 >= as_end
+                            ) and dep[2] != 0 and dep[2] - 1 not in dep_idx:
                             # and tokens[dep[2] - 1] not in stopWords
                             if str(dep[0]) != 'punct':
-                                dep_tag.append('ncon_'+str(current_hop))
+                                dep_tag.append('ncon_' + str(current_hop))
                                 dep_dir.append(1)
                             else:
                                 dep_tag.append('<pad>')
@@ -183,10 +212,11 @@ def reshape_dependency_tree_new(as_start, as_end, dependencies, multi_hop=False,
                             added = True
                     elif i == dep[2] - 1:
                         # not root, not aspect
-                        if (dep[1] - 1 < as_start or dep[1] - 1 >= as_end) and dep[1] != 0 and dep[1] - 1 not in dep_idx:
+                        if (dep[1] - 1 < as_start or dep[1] - 1 >= as_end
+                            ) and dep[1] != 0 and dep[1] - 1 not in dep_idx:
                             # and tokens[dep[1] - 1] not in stopWords
                             if str(dep[0]) != 'punct':
-                                dep_tag.append('ncon_'+str(current_hop))
+                                dep_tag.append('ncon_' + str(current_hop))
                                 dep_dir.append(2)
                             else:
                                 dep_tag.append('<pad>')
@@ -210,7 +240,7 @@ def reshape_dependency_tree_new(as_start, as_end, dependencies, multi_hop=False,
             dep_idx.append(idx)
 
     # sort token_idx in ascending order
-    index = [i[0] for i in sorted(enumerate(dep_idx), key=lambda x:x[1])]
+    index = [i[0] for i in sorted(enumerate(dep_idx), key=lambda x: x[1])]
     dep_tag = [dep_tag[i] for i in index]
     dep_idx = [dep_idx[i] for i in index]
     dep_dir = [dep_dir[i] for i in index]
@@ -219,7 +249,12 @@ def reshape_dependency_tree_new(as_start, as_end, dependencies, multi_hop=False,
     return dep_tag, dep_idx, dep_dir
 
 
-def reshape_dependency_tree(as_start, as_end, dependencies, add_2hop=False, add_non_connect=False, tokens=None):
+def reshape_dependency_tree(as_start,
+                            as_end,
+                            dependencies,
+                            add_2hop=False,
+                            add_non_connect=False,
+                            tokens=None):
     '''
     This function is at the core of our algo, it reshape the dependency tree and center on the aspect.
 
@@ -237,8 +272,11 @@ def reshape_dependency_tree(as_start, as_end, dependencies, add_2hop=False, add_
         for dep in dependencies:
             if i == dep[1] - 1:
                 # not root, not aspect
-                if (dep[2] - 1 < as_start or dep[2] - 1 >= as_end) and dep[2] != 0 and dep[2] - 1 not in dep_idx:
-                    if str(dep[0]) != 'punct':  # and tokens[dep[2] - 1] not in stopWords
+                if (dep[2] - 1 < as_start or dep[2] - 1 >= as_end
+                    ) and dep[2] != 0 and dep[2] - 1 not in dep_idx:
+                    if str(
+                            dep[0]
+                    ) != 'punct':  # and tokens[dep[2] - 1] not in stopWords
                         dep_tag.append(dep[0])
                         dep_dir.append(1)
                     else:
@@ -247,8 +285,11 @@ def reshape_dependency_tree(as_start, as_end, dependencies, add_2hop=False, add_
                     dep_idx.append(dep[2] - 1)
             elif i == dep[2] - 1:
                 # not root, not aspect
-                if (dep[1] - 1 < as_start or dep[1] - 1 >= as_end) and dep[1] != 0 and dep[1] - 1 not in dep_idx:
-                    if str(dep[0]) != 'punct':  # and tokens[dep[1] - 1] not in stopWords
+                if (dep[1] - 1 < as_start or dep[1] - 1 >= as_end
+                    ) and dep[1] != 0 and dep[1] - 1 not in dep_idx:
+                    if str(
+                            dep[0]
+                    ) != 'punct':  # and tokens[dep[1] - 1] not in stopWords
                         dep_tag.append(dep[0])
                         dep_dir.append(2)
                     else:
@@ -264,15 +305,17 @@ def reshape_dependency_tree(as_start, as_end, dependencies, add_2hop=False, add_
                 # connect to i, not a punct
                 if i == dep[1] - 1 and str(dep[0]) != 'punct':
                     # not root, not aspect
-                    if (dep[2] - 1 < as_start or dep[2] - 1 >= as_end) and dep[2] != 0:
-                        if dep[2]-1 not in dep_idx:
+                    if (dep[2] - 1 < as_start
+                            or dep[2] - 1 >= as_end) and dep[2] != 0:
+                        if dep[2] - 1 not in dep_idx:
                             dep_tag.append(dep[0])
                             dep_idx.append(dep[2] - 1)
                 # connect to i, not a punct
                 elif i == dep[2] - 1 and str(dep[0]) != 'punct':
                     # not root, not aspect
-                    if (dep[1] - 1 < as_start or dep[1] - 1 >= as_end) and dep[1] != 0:
-                        if dep[1]-1 not in dep_idx:
+                    if (dep[1] - 1 < as_start
+                            or dep[1] - 1 >= as_end) and dep[1] != 0:
+                        if dep[1] - 1 not in dep_idx:
                             dep_tag.append(dep[0])
                             dep_idx.append(dep[1] - 1)
     if add_non_connect:
@@ -289,7 +332,7 @@ def reshape_dependency_tree(as_start, as_end, dependencies, add_2hop=False, add_
             dep_dir.append(0)
             dep_idx.append(idx)
 
-    index = [i[0] for i in sorted(enumerate(dep_idx), key=lambda x:x[1])]
+    index = [i[0] for i in sorted(enumerate(dep_idx), key=lambda x: x[1])]
     dep_tag = [dep_tag[i] for i in index]
     dep_idx = [dep_idx[i] for i in index]
     dep_dir = [dep_dir[i] for i in index]
@@ -324,8 +367,10 @@ def get_rolled_and_unrolled_data(input_data, args):
                 Multiple aspects and multiple sentiments, UNROLLED.
     '''
     # A hand-picked set of part of speech tags that we see contributes to ABSA.
-    opinionated_tags = ['JJ', 'JJR', 'JJS', 'RB', 'RBR',
-                        'RBS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
+    opinionated_tags = [
+        'JJ', 'JJR', 'JJS', 'RB', 'RBR', 'RBS', 'VB', 'VBD', 'VBG', 'VBN',
+        'VBP', 'VBZ'
+    ]
 
     all_rolled = []
     all_unrolled = []
@@ -377,8 +422,14 @@ def get_rolled_and_unrolled_data(input_data, args):
 
             # Center on the aspect.
             # tag: dep relation, idx: token idx, dir: [0,1,2]
-            dep_tag, dep_idx, dep_dir = reshape_dependency_tree_new(frm, to, e['dependencies'],
-                                                                    multi_hop=args.multi_hop, add_non_connect=args.add_non_connect, tokens=e['tokens'], max_hop=args.max_hop)
+            dep_tag, dep_idx, dep_dir = reshape_dependency_tree_new(
+                frm,
+                to,
+                e['dependencies'],
+                multi_hop=args.multi_hop,
+                add_non_connect=args.add_non_connect,
+                tokens=e['tokens'],
+                max_hop=args.max_hop)
 
             # Because of tokenizer differences, aspect opsitions are off, so we find the index and try again.
             if len(dep_tag) == 0:
@@ -389,12 +440,18 @@ def get_rolled_and_unrolled_data(input_data, args):
                 as_end = e['tokens'].index(
                     as_sent[-1]) if len(as_sent) > 1 else as_start + 1
                 print("Debugging: as_start as_end ", as_start, as_end)
-                dep_tag, dep_idx, dep_dir = reshape_dependency_tree_new(as_start, as_end, e['dependencies'],
-                                                                        multi_hop=args.multi_hop, add_non_connect=args.add_non_connect, tokens=e['tokens'], max_hop=args.max_hop)
+                dep_tag, dep_idx, dep_dir = reshape_dependency_tree_new(
+                    as_start,
+                    as_end,
+                    e['dependencies'],
+                    multi_hop=args.multi_hop,
+                    add_non_connect=args.add_non_connect,
+                    tokens=e['tokens'],
+                    max_hop=args.max_hop)
                 if len(dep_tag) == 0:  # for debugging
-                    print("Debugging: zero_dep",
-                          e['aspect_sentiment'][i][0], e['tokens'])
-                    print("Debugging: ". e['dependencies'])
+                    print("Debugging: zero_dep", e['aspect_sentiment'][i][0],
+                          e['tokens'])
+                    print("Debugging: ".e['dependencies'])
                 else:
                     zero_dep_counter -= 1
 
@@ -405,28 +462,80 @@ def get_rolled_and_unrolled_data(input_data, args):
             total_counter[e['aspect_sentiment'][i][1]] += 1
 
             # Unrolling
-            all_unrolled.append(
-                {'sentence': e['tokens'], 'tags': e['tags'], 'pos_class': pos_class, 'aspect': aspect, 'sentiment': sentiment,
-                    'predicted_dependencies': e['predicted_dependencies'], 'predicted_heads': e['predicted_heads'],
-                 'from': frm, 'to': to, 'dep_tag': dep_tag, 'dep_idx': dep_idx, 'dep_dir': dep_dir, 'dependencies': e['dependencies']})
+            all_unrolled.append({
+                'sentence':
+                e['tokens'],
+                'tags':
+                e['tags'],
+                'pos_class':
+                pos_class,
+                'aspect':
+                aspect,
+                'sentiment':
+                sentiment,
+                'predicted_dependencies':
+                e['predicted_dependencies'],
+                'predicted_heads':
+                e['predicted_heads'],
+                'from':
+                frm,
+                'to':
+                to,
+                'dep_tag':
+                dep_tag,
+                'dep_idx':
+                dep_idx,
+                'dep_dir':
+                dep_dir,
+                'dependencies':
+                e['dependencies']
+            })
 
         # All sentences with multiple aspects and sentiments rolled.
-        all_rolled.append(
-            {'sentence': e['tokens'], 'tags': e['tags'], 'pos_class': pos_class, 'aspects': aspects, 'sentiments': sentiments,
-             'from': froms, 'to': tos, 'dep_tags': dep_tags, 'dep_index': dep_index, 'dependencies': e['dependencies']})
+        all_rolled.append({
+            'sentence': e['tokens'],
+            'tags': e['tags'],
+            'pos_class': pos_class,
+            'aspects': aspects,
+            'sentiments': sentiments,
+            'from': froms,
+            'to': tos,
+            'dep_tags': dep_tags,
+            'dep_index': dep_index,
+            'dependencies': e['dependencies']
+        })
 
         # Ignore sentences with single aspect or no aspect
-        if len(e['aspect_sentiment']) and len(set(map(lambda x: x[1], e['aspect_sentiment']))) > 1:
-            mixed_rolled.append(
-                {'sentence': e['tokens'], 'tags': e['tags'], 'pos_class': pos_class, 'aspects': aspects, 'sentiments': sentiments,
-                 'from': froms, 'to': tos, 'dep_tags': dep_tags, 'dep_index': dep_index, 'dependencies': e['dependencies']})
+        if len(e['aspect_sentiment']) and len(
+                set(map(lambda x: x[1], e['aspect_sentiment']))) > 1:
+            mixed_rolled.append({
+                'sentence': e['tokens'],
+                'tags': e['tags'],
+                'pos_class': pos_class,
+                'aspects': aspects,
+                'sentiments': sentiments,
+                'from': froms,
+                'to': tos,
+                'dep_tags': dep_tags,
+                'dep_index': dep_index,
+                'dependencies': e['dependencies']
+            })
 
             # Unrolling
             for i, as_sent in enumerate(e['aspect_sentiment']):
                 mixed_counter[as_sent[1]] += 1
-                mixed_unrolled.append(
-                    {'sentence': e['tokens'], 'tags': e['tags'], 'pos_class': pos_class, 'aspect': aspects[i], 'sentiment': sentiments[i],
-                     'from': froms[i], 'to': tos[i], 'dep_tag': dep_tags[i], 'dep_idx': dep_index[i], 'dependencies': e['dependencies']})
+                mixed_unrolled.append({
+                    'sentence': e['tokens'],
+                    'tags': e['tags'],
+                    'pos_class': pos_class,
+                    'aspect': aspects[i],
+                    'sentiment': sentiments[i],
+                    'from': froms[i],
+                    'to': tos[i],
+                    'dep_tag': dep_tags[i],
+                    'dep_idx': dep_index[i],
+                    'dependencies': e['dependencies']
+                })
 
     logger.info('Total sentiment counter: %s', total_counter)
     logger.info('Multi-Aspect-Multi-Sentiment counter: %s', mixed_counter)
@@ -439,10 +548,13 @@ def load_and_cache_vocabs(data, args):
     Build vocabulary of words, part of speech tags, dependency tags and cache them.
     Load glove embedding if needed.
     '''
-    pkls_path = os.path.join(
-        str(args.output_dir)+'-'+str(args.target_domain), 'pkls')
-    if args.arts_test:
-        pkls_path = os.path.join(str(args.output_dir)+'-arts', 'pkls')
+    # pkls_path = os.path.join(
+    #     str(args.output_dir) + '-' + str(args.target_domain), 'pkls')
+    pkls_path = '{}/{}-{}-pkls/'.format(
+        args.data_root_dir, args.source_domain,
+        args.target_domain + '-arts' if args.arts_test else args.target_domain)
+    # if args.arts_test:
+    #     pkls_path = os.path.join(str(args.output_dir) + '-arts', 'pkls')
 
     if not os.path.exists(pkls_path):
         os.makedirs(pkls_path)
@@ -451,30 +563,31 @@ def load_and_cache_vocabs(data, args):
     # Elmo and bert have it's own vocab and embeddings.
     if args.embedding_type == 'glove':
         cached_word_vocab_file = os.path.join(
-            pkls_path, 'cached_{}_{}_word_vocab.pkl'.format(args.source_domain, args.embedding_type))
+            pkls_path, 'cached_{}_word_vocab.pkl'.format(args.embedding_type))
         if os.path.exists(cached_word_vocab_file):
             logger.info('Loading word vocab from %s', cached_word_vocab_file)
             with open(cached_word_vocab_file, 'rb') as f:
                 word_vocab = pickle.load(f)
         else:
-            logger.info('Creating word vocab from dataset %s',
-                        args.source_domain)
-            word_vocab = build_text_vocab(data)
+            logger.info('Creating word vocab.')
+            word_vocab = build_text_vocab(data)  # [10.27] load word vocab
             logger.info('Word vocab size: %s', word_vocab['len'])
             logging.info('Saving word vocab to %s', cached_word_vocab_file)
             with open(cached_word_vocab_file, 'wb') as f:
                 pickle.dump(word_vocab, f, -1)
 
-        cached_word_vecs_file = os.path.join(pkls_path, 'cached_{}_{}_word_vecs.pkl'.format(
-            args.source_domain, args.embedding_type))
+        cached_word_vecs_file = os.path.join(
+            pkls_path, 'cached_{}_word_vecs.pkl'.format(args.embedding_type))
         if os.path.exists(cached_word_vecs_file):
             logger.info('Loading word vecs from %s', cached_word_vecs_file)
             with open(cached_word_vecs_file, 'rb') as f:
                 word_vecs = pickle.load(f)
         else:
+            args.glove_dir = '{}/glove/'.format(args.data_root_dir)
             logger.info('Creating word vecs from %s', args.glove_dir)
-            word_vecs = load_glove_embedding(
-                word_vocab['itos'], args.glove_dir, 0.25, args.embedding_dim)
+            word_vecs = load_glove_embedding(word_vocab['itos'],
+                                             args.glove_dir, 0.25,
+                                             args.embedding_dim)
             logger.info('Saving word vecs to %s', cached_word_vecs_file)
             with open(cached_word_vecs_file, 'wb') as f:
                 pickle.dump(word_vecs, f, -1)
@@ -483,8 +596,8 @@ def load_and_cache_vocabs(data, args):
         word_vecs = None
 
     # Build vocab of dependency tags
-    cached_dep_tag_vocab_file = os.path.join(
-        pkls_path, 'cached_{}_dep_tag_vocab.pkl'.format(args.source_domain))
+    cached_dep_tag_vocab_file = os.path.join(pkls_path,
+                                             'cached_dep_tag_vocab.pkl')
     if os.path.exists(cached_dep_tag_vocab_file):
         logger.info('Loading vocab of dependency tags from %s',
                     cached_dep_tag_vocab_file)
@@ -499,8 +612,8 @@ def load_and_cache_vocabs(data, args):
             pickle.dump(dep_tag_vocab, f, -1)
 
     # Build vocab of part of speech tags.
-    cached_pos_tag_vocab_file = os.path.join(
-        pkls_path, 'cached_{}_pos_tag_vocab.pkl'.format(args.source_domain))
+    cached_pos_tag_vocab_file = os.path.join(pkls_path,
+                                             'cached_pos_tag_vocab.pkl')
     if os.path.exists(cached_pos_tag_vocab_file):
         logger.info('Loading vocab of dependency tags from %s',
                     cached_pos_tag_vocab_file)
@@ -526,16 +639,20 @@ def load_glove_embedding(word_list, glove_dir, uniform_scale, dimension_size):
     word_vectors = []
     for word in word_list:
         if word in word2offset:
-            line = linecache.getline(os.path.join(
-                glove_dir, 'glove.840B.300d.txt'), word2offset[word]+1)
-            assert(word == line[:line.find(' ')].strip())
-            word_vectors.append(np.fromstring(
-                line[line.find(' '):].strip(), sep=' ', dtype=np.float32))
+            line = linecache.getline(
+                os.path.join(glove_dir, 'glove.840B.300d.txt'),
+                word2offset[word] + 1)
+            assert (word == line[:line.find(' ')].strip())
+            word_vectors.append(
+                np.fromstring(line[line.find(' '):].strip(),
+                              sep=' ',
+                              dtype=np.float32))
         elif word == '<pad>':
             word_vectors.append(np.zeros(dimension_size, dtype=np.float32))
         else:
             word_vectors.append(
-                np.random.uniform(-uniform_scale, uniform_scale, dimension_size))
+                np.random.uniform(-uniform_scale, uniform_scale,
+                                  dimension_size))
     return word_vectors
 
 
@@ -710,16 +827,9 @@ class ASBA_Depparsed_Dataset(Dataset):
 
     def __getitem__(self, idx):
         e = self.data[idx]
-        '''
-        if self.args.case_study:
-            items = e['sentence'], e['dep_tag_ids'], \
-                e['pos_class'], e['text_len'], e['aspect_len'], e['sentiment'],\
-                e['dep_rel_ids'], e['predicted_heads'], e['aspect_position'], e['dep_dir_ids']
-        else:
-            '''
         items = e['dep_tag_ids'], \
-            e['pos_class'], e['text_len'], e['aspect_len'], e['sentiment'],\
-            e['dep_rel_ids'], e['predicted_heads'], e['aspect_position'], e['dep_dir_ids']
+            e['pos_class'], e['text_len'], e['aspect_len'],\
+            e['dep_rel_ids'], e['predicted_heads'], e['aspect_position'], e['dep_dir_ids'], e['sentiment']
         if self.args.embedding_type == 'glove':
             non_bert_items = e['sentence_ids'], e['aspect_ids']
             items_tensor = non_bert_items + items
@@ -727,17 +837,22 @@ class ASBA_Depparsed_Dataset(Dataset):
         elif self.args.embedding_type == 'elmo':
             items_tensor = e['sentence_ids'], e['aspect_ids']
             items_tensor += tuple(torch.tensor(t) for t in items)
-        else:  # bert
-            if self.args.pure_bert or self.args.capsnet_bert:
-                bert_items = e['input_ids'], e['input_cat_ids'], e['segment_ids']
-                items_tensor = tuple(torch.tensor(t) for t in bert_items)
-                items_tensor += tuple(torch.tensor(t) for t in items)
-            elif self.args.gat_bert:
-                bert_items = e['input_ids'], e['word_indexer'], e['input_aspect_ids'], e[
-                    'aspect_indexer'], e['input_cat_ids'], e['segment_ids']
-                # segment_id
-                items_tensor = tuple(torch.tensor(t) for t in bert_items)
-                items_tensor += tuple(torch.tensor(t) for t in items)
+        else:  # BERT-based Models
+            # if self.args.pure_bert or self.args.capsnet_bert:
+            #     bert_items = e['input_ids'], e['input_cat_ids'], e[
+            #         'segment_ids']
+            #     items_tensor = tuple(torch.tensor(t) for t in bert_items)
+            #     items_tensor += tuple(torch.tensor(t) for t in items)
+            # elif self.args.gat_bert:
+            #     bert_items = e['input_ids'], e['word_indexer'], e[
+            #         'input_aspect_ids'], e['aspect_indexer'], e[
+            #             'input_cat_ids'], e['segment_ids']
+            bert_items = e['input_ids'], e['input_cat_ids'], e[
+                'segment_ids'], e['word_indexer'], e['input_aspect_ids'], e[
+                    'aspect_indexer']
+            # segment_id
+            items_tensor = tuple(torch.tensor(t) for t in bert_items)
+            items_tensor += tuple(torch.tensor(t) for t in items)
         return items_tensor
 
     def convert_features_bert(self, i):
@@ -779,8 +894,8 @@ class ASBA_Depparsed_Dataset(Dataset):
 
         tokens = [cls_token] + tokens + [sep_token]
         aspect_tokens = [cls_token] + aspect_tokens + [sep_token]
-        word_indexer = [i+1 for i in word_indexer]
-        aspect_indexer = [i+1 for i in aspect_indexer]
+        word_indexer = [i + 1 for i in word_indexer]
+        aspect_indexer = [i + 1 for i in aspect_indexer]
 
         input_ids = self.args.tokenizer.convert_tokens_to_ids(tokens)
         input_aspect_ids = self.args.tokenizer.convert_tokens_to_ids(
@@ -792,25 +907,15 @@ class ASBA_Depparsed_Dataset(Dataset):
 
         # THE STEP:Zero-pad up to the sequence length, save to collate_fn.
 
-        if self.args.pure_bert:
-            input_cat_ids = input_ids + input_aspect_ids[1:]
-            segment_ids = [0] * len(input_ids) + [1] * \
+        input_cat_ids = input_ids + input_aspect_ids[1:]
+        segment_ids = [0] * len(input_ids) + [1] * \
                 len(input_aspect_ids[1:])
-
-            self.data[i]['input_cat_ids'] = input_cat_ids
-            self.data[i]['segment_ids'] = segment_ids
-            self.data[i]['input_ids'] = input_ids
-        else:
-            input_cat_ids = input_ids + input_aspect_ids[1:]
-            segment_ids = [0] * len(input_ids) + [1] * \
-                len(input_aspect_ids[1:])
-
-            self.data[i]['input_cat_ids'] = input_cat_ids
-            self.data[i]['segment_ids'] = segment_ids
-            self.data[i]['input_ids'] = input_ids
-            self.data[i]['word_indexer'] = word_indexer
-            self.data[i]['input_aspect_ids'] = input_aspect_ids
-            self.data[i]['aspect_indexer'] = aspect_indexer
+        self.data[i]['input_cat_ids'] = input_cat_ids
+        self.data[i]['segment_ids'] = segment_ids
+        self.data[i]['input_ids'] = input_ids
+        self.data[i]['word_indexer'] = word_indexer
+        self.data[i]['input_aspect_ids'] = input_aspect_ids
+        self.data[i]['aspect_indexer'] = aspect_indexer
 
     def convert_features(self):
         '''
@@ -818,10 +923,13 @@ class ASBA_Depparsed_Dataset(Dataset):
         '''
         for i in range(len(self.data)):
             if self.args.embedding_type == 'glove':
-                self.data[i]['sentence_ids'] = [self.word_vocab['stoi'][w]
-                                                for w in self.data[i]['sentence']]
-                self.data[i]['aspect_ids'] = [self.word_vocab['stoi'][w]
-                                              for w in self.data[i]['aspect']]
+                self.data[i]['sentence_ids'] = [
+                    self.word_vocab['stoi'][w]
+                    for w in self.data[i]['sentence']
+                ]
+                self.data[i]['aspect_ids'] = [
+                    self.word_vocab['stoi'][w] for w in self.data[i]['aspect']
+                ]
             elif self.args.embedding_type == 'elmo':
                 self.data[i]['sentence_ids'] = self.data[i]['sentence']
                 self.data[i]['aspect_ids'] = self.data[i]['aspect']
@@ -837,19 +945,24 @@ class ASBA_Depparsed_Dataset(Dataset):
                 #print(self.data[i]['sentence'], self.data[i]['from'], self.data[i]['to'])
                 #assert False
                 for term in self.data[i]['aspect']:
-                    self.data[i]['aspect_position'][self.data[i]
-                                                    ['sentence'].index(term)] = 1
+                    self.data[i]['aspect_position'][
+                        self.data[i]['sentence'].index(term)] = 1
 
-            self.data[i]['dep_tag_ids'] = [self.dep_tag_vocab['stoi'][w]
-                                           for w in self.data[i]['dep_tag']]
-            self.data[i]['dep_dir_ids'] = [idx
-                                           for idx in self.data[i]['dep_dir']]
-            self.data[i]['pos_class'] = [self.pos_tag_vocab['stoi'][w]
-                                         for w in self.data[i]['tags']]
+            self.data[i]['dep_tag_ids'] = [
+                self.dep_tag_vocab['stoi'][w] for w in self.data[i]['dep_tag']
+            ]
+            self.data[i]['dep_dir_ids'] = [
+                idx for idx in self.data[i]['dep_dir']
+            ]
+            self.data[i]['pos_class'] = [
+                self.pos_tag_vocab['stoi'][w] for w in self.data[i]['tags']
+            ]
             self.data[i]['aspect_len'] = len(self.data[i]['aspect'])
 
-            self.data[i]['dep_rel_ids'] = [self.dep_tag_vocab['stoi'][r]
-                                           for r in self.data[i]['predicted_dependencies']]
+            self.data[i]['dep_rel_ids'] = [
+                self.dep_tag_vocab['stoi'][r]
+                for r in self.data[i]['predicted_dependencies']
+            ]
 
 
 def my_collate(batch):
@@ -865,11 +978,13 @@ def my_collate(batch):
     sentiment = torch.tensor(sentiment)
 
     # Pad sequences.
-    sentence_ids = pad_sequence(
-        sentence_ids, batch_first=True, padding_value=0)
+    sentence_ids = pad_sequence(sentence_ids,
+                                batch_first=True,
+                                padding_value=0)
     aspect_ids = pad_sequence(aspect_ids, batch_first=True, padding_value=0)
-    aspect_positions = pad_sequence(
-        aspect_positions, batch_first=True, padding_value=0)
+    aspect_positions = pad_sequence(aspect_positions,
+                                    batch_first=True,
+                                    padding_value=0)
 
     dep_tag_ids = pad_sequence(dep_tag_ids, batch_first=True, padding_value=0)
     dep_dir_ids = pad_sequence(dep_dir_ids, batch_first=True, padding_value=0)
@@ -912,8 +1027,9 @@ def my_collate_elmo(batch):
     sentence_ids = batch_to_ids(sentence_ids)
     aspect_ids = batch_to_ids(aspect_ids)
 
-    aspect_positions = pad_sequence(
-        aspect_positions, batch_first=True, padding_value=0)
+    aspect_positions = pad_sequence(aspect_positions,
+                                    batch_first=True,
+                                    padding_value=0)
 
     dep_tag_ids = pad_sequence(dep_tag_ids, batch_first=True, padding_value=0)
     dep_dir_ids = pad_sequence(dep_dir_ids, batch_first=True, padding_value=0)
@@ -939,61 +1055,6 @@ def my_collate_elmo(batch):
     return sentence_ids, aspect_ids, dep_tag_ids, pos_class, text_len, aspect_len, sentiment, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids
 
 
-# 11/7
-def my_collate_pure_bert(batch):
-    '''
-    Pad sentence and aspect in a batch.
-    Sort the sentences based on length.
-    Turn all into tensors.
-
-    Process bert feature
-    Pure Bert: cat text and aspect, cls to predict.
-    Test indexing while at it?
-    '''
-    # sentence_ids, aspect_ids
-    input_ids, input_cat_ids, segment_ids, dep_tag_ids, pos_class, text_len, aspect_len, sentiment, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids = zip(
-        *batch)  # from Dataset.__getitem__()
-
-    text_len = torch.tensor(text_len)
-    aspect_len = torch.tensor(aspect_len)
-    sentiment = torch.tensor(sentiment)
-
-    # Pad sequences.
-    input_ids = pad_sequence(
-        input_ids, batch_first=True, padding_value=0)
-    input_cat_ids = pad_sequence(
-        input_cat_ids, batch_first=True, padding_value=0)
-    segment_ids = pad_sequence(segment_ids, batch_first=True, padding_value=0)
-
-    aspect_positions = pad_sequence(
-        aspect_positions, batch_first=True, padding_value=0)
-
-    dep_tag_ids = pad_sequence(dep_tag_ids, batch_first=True, padding_value=0)
-    dep_dir_ids = pad_sequence(dep_dir_ids, batch_first=True, padding_value=0)
-    pos_class = pad_sequence(pos_class, batch_first=True, padding_value=0)
-
-    dep_rel_ids = pad_sequence(dep_rel_ids, batch_first=True, padding_value=0)
-    dep_heads = pad_sequence(dep_heads, batch_first=True, padding_value=0)
-
-    # Sort all tensors based on text len.
-    _, sorted_idx = text_len.sort(descending=True)
-    input_ids = input_ids[sorted_idx]
-    input_cat_ids = input_cat_ids[sorted_idx]
-    segment_ids = segment_ids[sorted_idx]
-    aspect_positions = aspect_positions[sorted_idx]
-    dep_tag_ids = dep_tag_ids[sorted_idx]
-
-    dep_dir_ids = dep_dir_ids[sorted_idx]
-    pos_class = pos_class[sorted_idx]
-    text_len = text_len[sorted_idx]
-    aspect_len = aspect_len[sorted_idx]
-    sentiment = sentiment[sorted_idx]
-    dep_rel_ids = dep_rel_ids[sorted_idx]
-    dep_heads = dep_heads[sorted_idx]
-
-    return input_ids, input_cat_ids, segment_ids, dep_tag_ids, pos_class, text_len, aspect_len, sentiment, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids
-
-
 def my_collate_bert(batch):
     '''
     Pad sentence and aspect in a batch.
@@ -1002,7 +1063,7 @@ def my_collate_bert(batch):
 
     Process bert feature
     '''
-    input_ids, word_indexer, input_aspect_ids, aspect_indexer, input_cat_ids, segment_ids, dep_tag_ids, pos_class, text_len, aspect_len, sentiment, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids = zip(
+    input_ids, input_cat_ids, segment_ids, word_indexer, input_aspect_ids, aspect_indexer, dep_tag_ids, pos_class, text_len, aspect_len, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids, sentiment = zip(
         *batch)
     text_len = torch.tensor(text_len)
     aspect_len = torch.tensor(aspect_len)
@@ -1010,19 +1071,24 @@ def my_collate_bert(batch):
 
     # Pad sequences.
     input_ids = pad_sequence(input_ids, batch_first=True, padding_value=0)
-    input_aspect_ids = pad_sequence(
-        input_aspect_ids, batch_first=True, padding_value=0)
-    input_cat_ids = pad_sequence(
-        input_cat_ids, batch_first=True, padding_value=0)
+    input_aspect_ids = pad_sequence(input_aspect_ids,
+                                    batch_first=True,
+                                    padding_value=0)
+    input_cat_ids = pad_sequence(input_cat_ids,
+                                 batch_first=True,
+                                 padding_value=0)
     segment_ids = pad_sequence(segment_ids, batch_first=True, padding_value=0)
     # indexer are padded with 1, for ...
-    word_indexer = pad_sequence(
-        word_indexer, batch_first=True, padding_value=1)
-    aspect_indexer = pad_sequence(
-        aspect_indexer, batch_first=True, padding_value=1)
+    word_indexer = pad_sequence(word_indexer,
+                                batch_first=True,
+                                padding_value=1)
+    aspect_indexer = pad_sequence(aspect_indexer,
+                                  batch_first=True,
+                                  padding_value=1)
 
-    aspect_positions = pad_sequence(
-        aspect_positions, batch_first=True, padding_value=0)
+    aspect_positions = pad_sequence(aspect_positions,
+                                    batch_first=True,
+                                    padding_value=0)
 
     dep_tag_ids = pad_sequence(dep_tag_ids, batch_first=True, padding_value=0)
     dep_dir_ids = pad_sequence(dep_dir_ids, batch_first=True, padding_value=0)
@@ -1049,7 +1115,7 @@ def my_collate_bert(batch):
     dep_rel_ids = dep_rel_ids[sorted_idx]
     dep_heads = dep_heads[sorted_idx]
 
-    return input_ids, word_indexer, input_aspect_ids, aspect_indexer, input_cat_ids, segment_ids, dep_tag_ids, pos_class, text_len, aspect_len, sentiment, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids
+    return input_ids, input_cat_ids, segment_ids, word_indexer, input_aspect_ids, aspect_indexer, dep_tag_ids, pos_class, text_len, aspect_len, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids, sentiment
 
 
 def my_collate_case_study(batch):
@@ -1068,19 +1134,24 @@ def my_collate_case_study(batch):
 
     # Pad sequences.
     input_ids = pad_sequence(input_ids, batch_first=True, padding_value=0)
-    input_aspect_ids = pad_sequence(
-        input_aspect_ids, batch_first=True, padding_value=0)
-    input_cat_ids = pad_sequence(
-        input_cat_ids, batch_first=True, padding_value=0)
+    input_aspect_ids = pad_sequence(input_aspect_ids,
+                                    batch_first=True,
+                                    padding_value=0)
+    input_cat_ids = pad_sequence(input_cat_ids,
+                                 batch_first=True,
+                                 padding_value=0)
     segment_ids = pad_sequence(segment_ids, batch_first=True, padding_value=0)
     # indexer are padded with 1, for ...
-    word_indexer = pad_sequence(
-        word_indexer, batch_first=True, padding_value=1)
-    aspect_indexer = pad_sequence(
-        aspect_indexer, batch_first=True, padding_value=1)
+    word_indexer = pad_sequence(word_indexer,
+                                batch_first=True,
+                                padding_value=1)
+    aspect_indexer = pad_sequence(aspect_indexer,
+                                  batch_first=True,
+                                  padding_value=1)
 
-    aspect_positions = pad_sequence(
-        aspect_positions, batch_first=True, padding_value=0)
+    aspect_positions = pad_sequence(aspect_positions,
+                                    batch_first=True,
+                                    padding_value=0)
 
     dep_tag_ids = pad_sequence(dep_tag_ids, batch_first=True, padding_value=0)
     dep_dir_ids = pad_sequence(dep_dir_ids, batch_first=True, padding_value=0)
@@ -1108,3 +1179,143 @@ def my_collate_case_study(batch):
     dep_heads = dep_heads[sorted_idx]
 
     return input_ids, word_indexer, input_aspect_ids, aspect_indexer, input_cat_ids, segment_ids, dep_tag_ids, pos_class, text_len, aspect_len, sentiment, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids, sentence
+
+
+# 2023.10.28 add
+class ABSADataset_from_Raw(Dataset):
+
+    def __init__(self, args, do_train=True):
+        self.args = args
+        self.tokenizer = args.tokenizer
+
+        data_root_dir = args.data_root_dir
+
+        if do_train:
+            dataset = args.source_domain
+            split_set = 'train'
+        else:
+            dataset = args.target_domain
+            split_set = 'test'
+
+        if 'lap' in dataset:
+            domain = 'laptop'
+        elif 'mams' in dataset:
+            domain = 'mams'
+        else:
+            domain = 'restaurant'
+
+        fname = '{}/{}/{}_{}.raw'.format(  # NOTE: change data_root_dir accordingly.
+            data_root_dir, dataset, domain, split_set)
+        fin = open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+        lines = fin.readlines()
+        fin.close()
+
+        fin = open(fname + '.graph', 'rb')
+        idx2graph = pickle.load(fin)
+        fin.close()
+
+        all_data = []
+
+        for i in range(0, len(lines), 3):
+            text_left, _, text_right = [
+                s.lower().strip() for s in lines[i].partition("$T$")
+            ]
+
+            aspect = lines[i + 1].lower().strip()
+            polarity = lines[i + 2].strip()
+
+            text_indices = self._text_to_sequence(text_left + " " + aspect +
+                                                  " " + text_right)
+            context_indices = self._text_to_sequence(text_left + " " +
+                                                     text_right)
+            left_indices = self._text_to_sequence(text_left)
+            aspect_indices = self._text_to_sequence(aspect)
+            left_len = np.sum(left_indices
+                              != 0)  # position index of the target aspect
+            aspect_len = np.sum(aspect_indices != 0)
+            # aspect_boundary = np.asarray([left_len, left_len + aspect_len - 1], dtype=np.int64)
+            polarity = int(polarity) + 1
+
+            text_len = np.sum(text_indices != 0)
+            word_indexer = [i + 1 for i in range(text_len)]
+            word_indexer = self._pad_and_truncate(word_indexer,
+                                                  self.args.max_seq_len)
+            # assert len(word_indexer) == text_len
+            concat_bert_indices = self._text_to_sequence('[CLS] ' + text_left +
+                                                         " " + aspect + " " +
+                                                         text_right +
+                                                         ' [SEP] ' + aspect +
+                                                         " [SEP]")
+            concat_segments_indices = [0] * (text_len +
+                                             2) + [1] * (aspect_len + 1)
+            concat_segments_indices = self._pad_and_truncate(
+                concat_segments_indices, self.args.max_seq_len)
+
+            dependency_graph = np.pad(
+                idx2graph[i],
+                ((0, self.args.max_seq_len - idx2graph[i].shape[0]),
+                 (0, self.args.max_seq_len - idx2graph[i].shape[0])),
+                'constant')
+
+            data = {
+                'input_cat_ids': concat_bert_indices,
+                'segment_ids': concat_segments_indices,
+                'adj': dependency_graph,
+                'polarity': polarity,
+                'text_len': text_len,
+                'aspect_len': aspect_len,
+                'left_len': left_len,
+                'word_indexer': word_indexer
+            }
+
+            all_data.append(data)
+
+        self.data = all_data
+
+    def _pad_and_truncate(self,
+                          sequence,
+                          maxlen,
+                          dtype='int64',
+                          padding='post',
+                          truncating='post',
+                          value=0):
+        x = (np.zeros(maxlen) * value).astype(
+            dtype)
+        if truncating == 'pre':
+            trunc = sequence[-maxlen:]
+        else:
+            trunc = sequence[:maxlen]
+        trunc = np.asarray(trunc, dtype=dtype)
+        if padding == 'post':
+            x[:len(trunc)] = trunc
+        else:
+            x[-len(trunc):] = trunc
+        return x
+
+    def _text_to_sequence(self,
+                          text,
+                          reverse=False,
+                          padding='post',
+                          truncating='post'):
+        sequence = self.tokenizer.convert_tokens_to_ids(
+            self.tokenizer.tokenize(text))
+        if len(sequence) == 0:
+            sequence = [0]
+        if reverse:
+            sequence = sequence[::-1]
+        return self._pad_and_truncate(sequence,
+                                      self.args.max_seq_len,
+                                      padding=padding,
+                                      truncating=truncating)
+
+    def __getitem__(self, index):
+        e = self.data[index]
+        items = [
+            e['input_cat_ids'], e['segment_ids'], e['text_len'],
+            e['aspect_len'], e['left_len'], e['adj'], e['word_indexer'],
+            e['polarity']
+        ]
+        return tuple(torch.tensor(i) for i in items)
+
+    def __len__(self):
+        return len(self.data)
