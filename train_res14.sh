@@ -43,7 +43,7 @@ do
                 do 
                     for ib_learning_rate in "${ib_lrs[@]}"
                     do
-                        CUDA_VISIBLE_DEVICES=$GPU_ID python run.py --seed $seed \
+                        CUDA_VISIBLE_DEVICES=$GPU_ID python train.py --seed $seed \
                         --cuda_id $GPU_ID \
                         --prune \
                         --use_ib \
