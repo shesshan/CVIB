@@ -5,7 +5,7 @@ This repo contains the PyTorch implementation for our paper:
 
 Mingshan Chang, Min Yang, Qingshan Jiang, Ruifeng Xu. *Knowledge-Based Systems, 2024: 111302.*
 
-Please cite our paper and kindly give a star if you use this repo~
+Please cite our paper and kindly give a star if you use this repo. 
 
 ## Requirements
 - Python 3.9.7
