@@ -1,7 +1,7 @@
 # coding=utf-8
 import sys
 from trainer import train, train_single_vib, train_vib, train_sdclr
-from model import Pure_Bert, CapsNet_Bert, Aspect_Bert_GAT, Aspect_Bert_GCN
+from model import Aspect_Bert_GAT, Aspect_Bert_GCN
 from custom_datasets import load_datasets_and_vocabs, ABSADataset_from_Raw
 from transformers import BertTokenizer, BertConfig
 import torch
@@ -22,9 +22,7 @@ OPTIMIZERS = {
 
 MODELS = {
     'asgcn_bert': Aspect_Bert_GCN,
-    'rgat_bert': Aspect_Bert_GAT,
-    'bert_spc': Pure_Bert,
-    'capsnet_bert': CapsNet_Bert,
+    'rgat_bert': Aspect_Bert_GAT
 }
 
 
@@ -138,7 +136,7 @@ def parse_args():
         '--model_name',
         type=str,
         default='rgat_bert',
-        choices=['asgcn_bert', 'rgat_bert', 'bert_spc', 'capsnet_bert'],
+        choices=['asgcn_bert', 'rgat_bert'],
         help='backbone model.')
 
     parser.add_argument('--spc',
@@ -341,6 +339,7 @@ def check_args(args):
     '''
     logging.info(vars(args))
 
+
 def write_to_csv(save_path, results):
     import csv
     with open(save_path, 'a+') as f:
@@ -366,7 +365,6 @@ def main():
         args.source_domain,
         args.target_domain + '-ARTS' if args.arts_test else args.target_domain)
 
-
     if not os.path.exists(save_folder):
         os.mkdir(save_folder)
 
@@ -390,7 +388,7 @@ def main():
     set_seed(args)
 
     # Bert, load pretrained model and tokenizer, check if neccesary to put bert here
-    if args.embedding_type == 'bert':  
+    if args.embedding_type == 'bert':
         # embedding_type: glove OR bert
         tokenizer = BertTokenizer.from_pretrained(args.bert_model_dir)
 
@@ -399,7 +397,8 @@ def main():
         train_dataset = ABSADataset_from_Raw(args)
         test_dataset = ABSADataset_from_Raw(args, do_train=False)
     else:
-        train_dataset, test_dataset, word_vocab, dep_tag_vocab, pos_tag_vocab = load_datasets_and_vocabs(args)
+        train_dataset, test_dataset, word_vocab, dep_tag_vocab, pos_tag_vocab = load_datasets_and_vocabs(
+            args)
 
     # config_file can be customized json file or pretrain-model load path
     if args.config_file:
@@ -424,21 +423,18 @@ def main():
     model = MODELS[args.model_name]
     main_model, sub_model = None, None
     if 'rgat' in args.model_name:
-        if args.prune:
-            sub_model = model(args,
-                              config,
-                              dep_tag_vocab['len'],
-                              main_tag=False)  # self-pruned network
+        # RGAT-BERT
+        sub_model = model(args, config, dep_tag_vocab['len'],
+                          main_tag=False)  # self-pruned network
         main_model = model(args, config, dep_tag_vocab['len'],
                            main_tag=True)  # original network
-    else:
-        if args.prune:
-            sub_model = model(args, config, main_tag=False)
+    else: 
+        # other backbone
+        sub_model = model(args, config, main_tag=False)
         main_model = model(args, config, main_tag=True)
 
     main_model.to(args.device)
-    if sub_model is not None:
-        sub_model.to(args.device)
+    sub_model.to(args.device)
 
     args.optimizer = OPTIMIZERS[args.optimizer_type]
 
@@ -455,31 +451,12 @@ def main():
     elif 'gat' in args.model_name:
         genenral_params.append(args.gat_dropout)
     # Train
-    if args.prune:
-        if config.use_ib:
-            main_eval_results, sub_eval_results = train_vib(  # CVIB
-                args, main_model, sub_model, train_dataset, test_dataset)
-            params_and_results = genenral_params + [
-                args.kl_fac, args.ib_lr, args.ib_wd, args.sdcl_fac,
-                args.sd_temp
-            ]
-        else:
-            main_eval_results, sub_eval_results = train_sdclr(  # w/o VIB
-                args, main_model, sub_model, train_dataset, test_dataset)
-            params_and_results = genenral_params + [
-                args.sdcl_fac, args.sd_temp
-            ]
-    else:
-        if config.use_ib:  # w/o SCL
-            main_eval_results = train_single_vib(args, main_model,
-                                                 train_dataset, test_dataset)
-            params_and_results = genenral_params + [
-                args.kl_fac, args.ib_lr, args.ib_wd
-            ]
-        else:
-            main_eval_results = train(  # pure
-                args, train_dataset, main_model, test_dataset)
-            params_and_results = genenral_params
+    main_eval_results, sub_eval_results = train_vib(args, main_model,
+                                                    sub_model, train_dataset,
+                                                    test_dataset)
+    params_and_results = genenral_params + [
+        args.kl_fac, args.ib_lr, args.ib_wd, args.sdcl_fac, args.sd_temp
+    ]
 
     if len(main_eval_results):
         best_eval_acc = max(main_eval_results, key=lambda x: x['acc'])
@@ -506,7 +483,6 @@ def main():
     write_to_csv(save_path='{}/results_{}.csv'.format(
         args.save_folder, args.model_name if args.use_ib else 'pure'),
                  results=params_and_results)
-
 
 
 if __name__ == "__main__":
