@@ -1,6 +1,6 @@
 # coding=utf-8
 import sys
-from trainer import train, train_single_vib, train_vib, train_sdclr
+from trainer import train_vib
 from model import Aspect_Bert_GAT, Aspect_Bert_GCN
 from custom_datasets import load_datasets_and_vocabs, ABSADataset_from_Raw
 from transformers import BertTokenizer, BertConfig
