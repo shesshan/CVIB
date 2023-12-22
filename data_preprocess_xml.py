@@ -19,6 +19,31 @@ PARSER_PATH = 'biaffine-dependency-parser-ptb-2020.04.06'
 MODELS_DIR = './parser/'
 MODEL_PATH = os.path.join(MODELS_DIR, PARSER_PATH)
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    # Required parameters
+    parser.add_argument('--model_path',
+                        type=str,
+                        default=MODEL_PATH,
+                        help='Path to biaffine dependency parser.')
+    parser.add_argument(
+        '--data_path',
+        type=str,
+        default='./ABSA_RGAT',
+        help='Directory of data with .xml raw format.')
+    parser.add_argument('--dataset',
+                        type=str,
+                        default='lap14',
+                        choices=['rest14', 'lap14', 'mams'],
+                        help='Dataset to preprocess.')
+    parser.add_argument('--arts_set',
+                        type=str,
+                        default='ALL',
+                        choices=['ALL', 'REVTGT', 'REVNON', 'ADDDIFF'],
+                        help='set of ARTS, ALL/REVTGT/REVNON/ADDDIFF.')
+
+    return parser.parse_args()
 
 def xml2txt(file_path):
     '''
@@ -230,7 +255,7 @@ def main():
     predictor = Predictor.from_path(args.model_path)
 
     datasets = {
-        'res14': ('Restaurants_Train_v2.xml', 'Restaurants_Test_Gold.xml'),
+        'rest14': ('Restaurants_Train_v2.xml', 'Restaurants_Test_Gold.xml'),
         'lap14': ('Laptop_Train_v2.xml', 'Laptops_Test_Gold.xml'),
         'mams': ('train.xml', 'test.xml', 'val.xml'),
     }
@@ -238,8 +263,10 @@ def main():
     data = datasets[args.dataset]
 
     if args.dataset == 'mams':
+        args.data_path = '{}/{}'.format(args.data_path, 'mams')
         train_file, test_file, val_file = data
     else:
+        args.data_path = '{}/{}'.format(args.data_path, 'semeval14')
         train_file, test_file = data
         val_file = None
     # xml -> txt
@@ -315,33 +342,8 @@ def write_to_json(data_path, data):
         json_file.write(json_str)
     json_file.close()
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-
-    # Required parameters
-    parser.add_argument('--model_path',
-                        type=str,
-                        default=MODEL_PATH,
-                        help='Path to biaffine dependency parser.')
-    parser.add_argument(
-        '--data_path',
-        type=str,
-        default='/ossfs/workspace/ABSA_RGAT/semeval14',
-        help='Directory of where SemEval (or twiiter, MAMS) data held.')
-    parser.add_argument('--dataset',
-                        type=str,
-                        default='lap14',
-                        help='Dataset to preprocess.')
-    parser.add_argument('--arts_set',
-                        type=str,
-                        default='ALL',
-                        help='set of ARTS, ALL/REVTGT/REVNON/ADDDIFF.')
-
-    return parser.parse_args()
-
-
 if __name__ == "__main__":
     
-    # main() # process raw data with xml format
+    # main() # process data with .xml format, please set the dataset name as rest14, lap14 or mams
     process_arts() # process ARTS subsets
 
