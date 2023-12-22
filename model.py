@@ -78,7 +78,7 @@ class Aspect_Bert_GAT(nn.Module):
                  != word_indexer).float()  # (N，L)
         fmask[:, 0] = 1
     
-        # note: different dataset has different dep_tag vocab
+        # NOTE: different dataset has different dep_tag vocab
         dep_feature = self.dep_embed(dep_tags)
 
         batch_size, _ = input_cat_ids.size()
