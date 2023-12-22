@@ -1,6 +1,6 @@
 # coding=utf-8
 import sys
-from trainer import train_vib
+from trainer import train, train_single_vib, train_vib, train_sdclr
 from model import Aspect_Bert_GAT, Aspect_Bert_GCN
 from custom_datasets import load_datasets_and_vocabs, ABSADataset_from_Raw
 from transformers import BertTokenizer, BertConfig
@@ -75,6 +75,11 @@ def parse_args():
     parser.add_argument('--arts_test',
                         action='store_true',
                         help='Robustness Test on ARTS test set.')
+    parser.add_argument('--arts_set',
+                        type=str,
+                        default='ALL',
+                        choices=['ALL', 'REVTGT', 'REVNON', 'ADDDIFF'],
+                        help='ARTS datasets for testing.')
     parser.add_argument('--cross_domain',
                         action='store_true',
                         help='Out-Of-Domain Generalization Test.')
@@ -84,7 +89,7 @@ def parse_args():
     parser.add_argument(
         '--data_root_dir',
         type=str,
-        default='/data0/mschang/ABSA_RGAT/',
+        default='./ABSA_RGAT',
         help=
         'Directory to store ABSA data, such as raw data, vocab, embeddings, tags_vocab, etc.'
     )
@@ -107,11 +112,11 @@ def parse_args():
         help='location of BERT custom config file if specified.')
     parser.add_argument('--cuda_id',
                         type=str,
-                        default='3',
+                        default='0',
                         help='Choose which GPUs to run')
     parser.add_argument('--seed',
                         type=int,
-                        default=2019,
+                        default=2023,
                         help='random seed for initialization')
 
     # Model parameters
@@ -121,7 +126,7 @@ def parse_args():
                         choices=['glove', 'bert'])
     parser.add_argument('--glove_dir',
                         type=str,
-                        default='/data0/mschang/glove',
+                        default='./glove',
                         help='Directory of GloVe embeddings.')
     parser.add_argument('--embedding_dim',
                         type=int,
