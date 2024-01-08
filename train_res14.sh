@@ -1,6 +1,6 @@
 GPU_ID=0
 seed=2023
-data_root_dir='./ABSA_RGAT' # set data dir 
+data_root_dir='./ABSA_RGAT' # set to your path for ABSA training corpus. 
 source_domain='rest14'
 target_domain='rest14'
 config_file='./config/bert_config.json'
