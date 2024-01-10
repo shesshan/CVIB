@@ -52,7 +52,6 @@ Download [biaffine-dependency-parser-ptb-2020.04.06.tar.gz](https://storage.goog
 - Run the commands: ` bash train_xxx.sh `, e.g. run `bash train_res14.sh` to train with REST14 dataset.
 
 ## Citation
-The BibTex of the citation is as follow:
 ```bibtex
 @article{CHANG2024111302,
 title = {Contrastive variational information bottleneck for aspect-based sentiment analysis},
@@ -66,7 +65,7 @@ doi = {https://doi.org/10.1016/j.knosys.2023.111302},
 url = {https://www.sciencedirect.com/science/article/pii/S095070512301050X}
 }
 ```
-🤘Please cite our paper and kindly give a star if you find this repo useful.💡
+🤘Please cite our paper and kindly give a star if you find this repo helpful💡.
 
 ## Reference
 I'd like to express my gratitude to the contributors of the [RGAT-ABSA](https://github.com/songyouwei/ABSA-PyTorch) repo. It helps a lot! 👏👏
