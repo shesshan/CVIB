@@ -11,7 +11,7 @@ Hi there👋, this repo contains the PyTorch implementation for our paper:
 Mingshan Chang, Min Yang<sup>*</sup>, Qingshan Jiang, Ruifeng Xu. *Knowledge-Based Systems, 2024: 111302.*
 
 ## 📜 Summary
-> 🔎 Despite the effectiveness, deep ABSA models are susceptible to 🫧***spurious correlations***🫧 between input features and output labels, which in general suffer from poor robustness and generalization.
+> Despite the effectiveness, deep ABSA models are susceptible to 🫧***spurious correlations***🫧 between input features and output labels, which in general suffer from poor robustness and generalization.
 
 For better understanding, we provide an example of the spurious correlation problem in ABSA:
 
