@@ -1,22 +1,16 @@
-from torch.utils.data import DataLoader, Dataset
-from nltk.tokenize import TreebankWordTokenizer
+from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
-import argparse
-import codecs
 import json
 import linecache
 import logging
 import os
 import pickle
-import random
-import sys
 from collections import Counter, defaultdict
-from copy import copy, deepcopy
+from copy import deepcopy
 import numpy as np
 import simplejson as json
 import torch
 from allennlp.modules.elmo import batch_to_ids
-from lxml import etree
 import nltk
 from nltk import word_tokenize, sent_tokenize
 

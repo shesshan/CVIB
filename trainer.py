@@ -1,22 +1,16 @@
-from ast import arg
 import logging
 import os
 import random
 from utils.losses import SdConLoss, SupConLoss, Similarity, CapsuleLoss
-from model_utils import SparsePruner
 import numpy as np
 import torch
-from torch import optim
 import torch.nn as nn
-import torch.nn.functional as F
-from sklearn.metrics import f1_score, matthews_corrcoef
+from sklearn.metrics import f1_score
 from tensorboardX import SummaryWriter
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 import torch.distributed as dist
 from tqdm import tqdm, trange
-
 from custom_datasets import my_collate, my_collate_elmo, my_collate_bert
-from transformers import AdamW
 
 logger = logging.getLogger(__name__)
 

@@ -395,14 +395,14 @@ def main():
     # Bert, load pretrained model and tokenizer, check if neccesary to put bert here
     if args.embedding_type == 'bert':
         # embedding_type: glove OR bert
-        tokenizer = BertTokenizer.from_pretrained(args.bert_model_dir)
+        args.tokenizer = BertTokenizer.from_pretrained(args.bert_model_dir)
 
     # Load datasets and vocabs
     if 'gcn' in args.model_name:
         train_dataset = ABSADataset_from_Raw(args)
         test_dataset = ABSADataset_from_Raw(args, do_train=False)
     else:
-        train_dataset, test_dataset, word_vocab, dep_tag_vocab, pos_tag_vocab = load_datasets_and_vocabs(
+        train_dataset, test_dataset, _, dep_tag_vocab, _ = load_datasets_and_vocabs(
             args)
 
     # config_file can be customized json file or pretrain-model load path

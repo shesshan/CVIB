@@ -4,9 +4,7 @@ import random
 import sys
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
+from torch.utils.data import DataLoader, SequentialSampler
 from trainer import *
 import argparse
 from model import *
@@ -18,6 +16,7 @@ MODELS = {'rgat_bert': Aspect_Bert_GAT}
 ARTS_SETS = ['ALL', 'REVTGT', 'REVNON', 'ADDDIFF']
 
 sentiment_lookup = {'negative': 0, 'positive': 1, 'neutral': 2}
+
 reversed_sentiment_lookup = {v: k for k, v in sentiment_lookup.items()}
 
 
@@ -77,7 +76,7 @@ def parse_args():
                         help='ARTS datasets for testing.')
     parser.add_argument('--cross_domain',
                         action='store_true',
-                        help='Out-Of-Domain Generalization Test.')
+                        help='Cross-domain Generalization Test.')
     parser.add_argument('--case_study',
                         action='store_true',
                         help='Case study.')
@@ -180,7 +179,7 @@ def parse_args():
                         type=float,
                         default=0,
                         help='Dropout rate for embedding.')
-    # GAT
+    # RGAT
     parser.add_argument('--gat', action='store_true', help='GAT')
     parser.add_argument('--gat_our', action='store_true', help='GAT_our')
     parser.add_argument('--gat_attention_type',
@@ -188,7 +187,6 @@ def parse_args():
                         choices=['linear', 'dotprod', 'gcn'],
                         default='dotprod',
                         help='The attention used for gat')
-
     parser.add_argument('--hidden_size',
                         type=int,
                         default=300,
@@ -293,7 +291,6 @@ def test_imb_study(args, test_dataset, model):
 
     preds = None
     out_label_ids = None
-    criterion = nn.CrossEntropyLoss()
 
     for batch in test_dataloader:
         model.eval()
@@ -401,7 +398,7 @@ def bad_case_analysis(args, test_dataset, model):
 def test_case_study(args,
                     test_dataset,
                     model,
-                    model_2=None:
+                    model_2=None):
     results = {}
 
     test_sampler = SequentialSampler(test_dataset)
@@ -460,12 +457,12 @@ def test_case_study(args,
         # instances that CVIB correctly classifies while RGAT-BERT fails
         if (int(prediction[i]) == int(ground_truth[i])) and (int(
                 prediction_2[i]) != int(ground_truth[i])):
-            num_layers = len(attentions)
-            batch_size, num_heads, seq_len, seq_len = attentions[0].size()
+            # num_layers = len(attentions)
+            # batch_size, num_heads, seq_len, seq_len = attentions[0].size()
             sent_ids = inputs['input_cat_ids'][i].detach().cpu().numpy()
             aspect_ids = inputs['input_aspect_ids'][i].detach().cpu().numpy()
             sentence_text = args.tokenizer.decode(sent_ids)
-            sentence_tokens = args.tokenizer.tokenize(sentence_text)
+            # sentence_tokens = args.tokenizer.tokenize(sentence_text)
             aspect_text = args.tokenizer.decode(aspect_ids)
             records = 'Sentence: {}, Aspect: {}, Label: {}, [CVIB] Prediction: {}, [RGAT-BERT] Prediction: {} '.format(
                 sentence_text, aspect_text, int(ground_truth[i]),
@@ -548,7 +545,7 @@ def test_arts(args, test_datasets, model):
 
 
 def load_checkpoint(args, model, main_tag=False):
-    """load pre-train model for representation learning.
+    """load checkpoint.
     """
     save_path = str(args.save_folder) + '/checkpoints'
 
@@ -593,7 +590,7 @@ def main():
 
     save_folder = '{}/{}-{}'.format(
         save_folder, args.source_domain,
-        args.target_domain + '-ARTS' if args.arts_test else args.target_domain)
+        (args.target_domain + '-ARTS') if args.arts_test else args.target_domain)
 
     if not os.path.exists(save_folder):
         os.mkdir(save_folder)
@@ -617,7 +614,7 @@ def main():
 
     # Bert, load pretrained model and tokenizer, check if neccesary to put bert here
     if args.embedding_type == 'bert':  # embedding_type: glove OR bert
-        tokenizer = BertTokenizer.from_pretrained(args.bert_model_dir)
+        args.tokenizer = BertTokenizer.from_pretrained(args.bert_model_dir)
         
     # Load datasets and vocabs
     if args.arts_test:
@@ -655,9 +652,8 @@ def main():
     model = load_checkpoint( 
                 args, model, main_tag=False)
 
-    model_2 = None
     if args.case_study:
-        # set model_2 (RGAT-BERT)
+        # build the compared model: RGAT-BERT
         model_2 = Aspect_Bert_GAT(args,
                                   config,
                                   dep_tag_vocab['len'],
@@ -672,11 +668,11 @@ def main():
 
 
     if args.case_study:
-        results, _ = test_case_study(args, test_dataset, model, model_2)
+        test_case_study(args, test_dataset, model, model_2)
     elif args.imb_study:
-        results, _ = test_imb_study(args, test_dataset, model)
+        test_imb_study(args, test_dataset, model)
     elif args.arts_test:
-        results = test_arts(args, test_datasets, model)
+        test_arts(args, test_datasets, model)
     elif args.bad_case_analysis:
         bad_case_analysis(args, test_dataset, model)
 
