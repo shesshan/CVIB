@@ -18,8 +18,8 @@ For better understanding, we provide an example of the spurious correlation prob
 <img src="/docs/example_00.jpg" width = "50%" />
 
 To address this challenge, we propose a novel **C**ontrastive **V**ariational **I**nformation **B**ottleneck framework (called **CVIB**), encompassing an original network and a self-pruned network. These two networks are optimized simultaneously via contrastive learning.
-- We employ the variational information bottleneck (VIB) principle to learn an informative and compressed network (self-pruned network) from the original network, which discards the spurious correlations while preserving sufficient information about the sentiment labels.
-- A self-pruning contrastive loss is devised to optimize these two networks, where the representations learned by two networks are regarded as a semantically similar positive pair while representations of two different instances within a mini-batch are treated as a negative pair. 
+- We employ the variational information bottleneck (VIB) principle to learn a compressed yet informative network (self-pruned network) from the original network, which discards the spurious correlations while preserving sufficient information about the sentiment labels.
+- A self-pruning contrastive loss is devised to optimize these two networks, where the representations learned by the two networks are regarded as a semantically similar positive pair while representations of two different instances within a mini-batch are treated as a negative pair. 
 
 ## 🧩 Architecture
 <img src="/docs/cvib_frm_revise_v4_00.jpg" width = "85%" />
@@ -38,10 +38,10 @@ CVIB is composed of an original network and a self-pruned network, where the sel
 
 ### Preparation
 -  **BERT** <br>
-Download the pytorch version [bert-base-uncased](https://github.com/huggingface/transformers) from huggingface. Then, you can set the parameter `--bert_model_dir` to the local directory of the BERT model.
+Download the PyTorch version [bert-base-uncased](https://github.com/huggingface/transformers) from huggingface. Then, you can set the parameter `--bert_model_dir` to your local directory of the BERT model.
 
 -  **Dependency Parser** <br>
-Download [biaffine-dependency-parser-ptb-2020.04.06.tar.gz](https://storage.googleapis.com/allennlp-public-models/biaffine-dependency-parser-ptb-2020.04.06.tar.gz) to `./parser/` to build the dependency tree for review sentences. (necessary if you'd like to preprocess the data yourself.)
+Download [biaffine-dependency-parser-ptb-2020.04.06.tar.gz](https://storage.googleapis.com/allennlp-public-models/biaffine-dependency-parser-ptb-2020.04.06.tar.gz) to `./parser/`, to build the syntactic dependency tree for review sentences. (necessary if you'd like to preprocess the data yourself.)
 
 ### Data Pre-process
 - Code for data preprocessing can be found in [data_preprocess_raw.py](/data_preprocess_raw.py) (for REST15, REST16) and [data_preprocess_xml.py](/data_preprocess_xml.py) (for REST14, LAP14, MAMS and [ARTS](https://github.com/zhijing-jin/ARTS_TestSet)). 
