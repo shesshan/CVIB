@@ -66,5 +66,7 @@ doi = {https://doi.org/10.1016/j.knosys.2023.111302},
 url = {https://www.sciencedirect.com/science/article/pii/S095070512301050X}
 }
 ```
-
 🤘Please cite our paper and kindly give a star if you find this repo useful.💡
+
+## Reference
+I'd like to express my gratitude to the contributors of the [RGAT-ABSA](https://github.com/songyouwei/ABSA-PyTorch) repo. It helps a lot! 👏👏
