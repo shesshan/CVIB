@@ -1,3 +1,8 @@
+![](https://img.shields.io/badge/version-1.0.1-blue)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/shesshan/CVIB/blob/main/LICENSE)
+[![AAAI-24](https://img.shields.io/badge/KBS-2024-black?color=%232E8B57)]()
+[![Pytorch](https://img.shields.io/badge/PyTorch-%23FF6347.svg?e&logo=PyTorch&logoColor=white)](https://pytorch.org/)
+
 # 🪄CVIB
 Hi there👋, this repo contains the PyTorch implementation for our paper:
 
