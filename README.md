@@ -1,4 +1,4 @@
-# CVIB
+# 🪄CVIB
 Hi there👋, this repo contains the PyTorch implementation for our paper:
 
 **[Contrastive Variational Information Bottleneck for Aspect-based Sentiment Analysis](https://www.sciencedirect.com/science/article/pii/S095070512301050X/pdfft?md5=5f85969d1933e1db0abbdaabea2365cd&pid=1-s2.0-S095070512301050X-main.pdf)**
@@ -6,7 +6,7 @@ Hi there👋, this repo contains the PyTorch implementation for our paper:
 Mingshan Chang, Min Yang, Qingshan Jiang, Ruifeng Xu. *Knowledge-Based Systems, 2024: 111302.*
 
 ## 📜 Summary
-> 🧐 Despite the effectiveness, deep ABSA models are susceptible to 🫧***spurious correlations***🫧 between input features and output labels, which in general suffer from poor robustness and generalization.
+> 🔎 Despite the effectiveness, deep ABSA models are susceptible to 🫧***spurious correlations***🫧 between input features and output labels, which in general suffer from poor robustness and generalization.
 
 For better understanding, we provide an example of the spurious correlations problem in ABSA:
 
@@ -34,12 +34,12 @@ Download the pytorch version [bert-base-uncased](https://github.com/huggingface/
 Download [biaffine-dependency-parser-ptb-2020.04.06.tar.gz](https://storage.googleapis.com/allennlp-public-models/biaffine-dependency-parser-ptb-2020.04.06.tar.gz) to `./parser/` to build the dependency tree for review sentences. (necessary if you'd like to preprocess the data yourself.)
 
 ### Data Pre-process
-Code for data preprocessing can be found in [data_preprocess_raw.py](/data_preprocess_raw.py) (for REST15, REST16) and [data_preprocess_xml.py](/data_preprocess_xml.py) (for REST14, LAP14, MAMS and [ARTS](https://github.com/zhijing-jin/ARTS_TestSet)). 
+- Code for data preprocessing can be found in [data_preprocess_raw.py](/data_preprocess_raw.py) (for REST15, REST16) and [data_preprocess_xml.py](/data_preprocess_xml.py) (for REST14, LAP14, MAMS and [ARTS](https://github.com/zhijing-jin/ARTS_TestSet)). 
 
-The preprocessed data can be found in [ABSA_RGAT/](/ABSA_RGAT/). Also, we have provided the preprocessed data for choosing ASGCN-BERT as the backbone in [ABSA_Graph/](/ABSA_Graph/).
+- The preprocessed data can be found in [ABSA_RGAT/](/ABSA_RGAT/). Also, we have provided the preprocessed data in [ABSA_Graph/](/ABSA_Graph/) (for choosing ASGCN-BERT as the backbone).
 
 ### Training
-Run the commands: ` bash train_xxx.sh `, e.g. run `bash train_res14.sh` to train with REST14 dataset.
+- Run the commands: ` bash train_xxx.sh `, e.g. run `bash train_res14.sh` to train with REST14 dataset.
 
 ## Citation
 The BibTex of the citation is as follow:
