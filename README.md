@@ -13,20 +13,24 @@ Mingshan Chang, Min Yang<sup>*</sup>, Qingshan Jiang, Ruifeng Xu. *Knowledge-Bas
 ## 📜 Summary
 > Despite the effectiveness, deep ABSA models are susceptible to 🫧***spurious correlations***🫧 between input features and output labels, which in general suffer from poor robustness and generalization.
 
-For better understanding, we provide an example of the spurious correlation problem in ABSA:
+An exemplary case of spurious correlations in ABSA:
 
 <img src="/docs/example_00.jpg" width = "50%" />
 
+🤔Deep models tend to learn the shallow association between context words “never had” and the label “POSITIVE”.
+<br>😢They would fail to infer the ground-truth label “NEUTRAL” for the testing instance holding the same words “never had”.
+
+
 To address this challenge, we propose a novel **C**ontrastive **V**ariational **I**nformation **B**ottleneck framework (called **CVIB**), encompassing an original network and a self-pruned network. These two networks are optimized simultaneously via contrastive learning.
-- We employ the variational information bottleneck (VIB) principle to learn a compressed yet informative network (self-pruned network) from the original network, which discards the spurious correlations while preserving sufficient information about the sentiment labels.
-- A self-pruning contrastive loss is devised to optimize these two networks, where the representations learned by the two networks are regarded as a semantically similar positive pair while representations of two different instances within a mini-batch are treated as a negative pair. 
+- We employ the variational information bottleneck (VIB) principle to learn a compressed yet informative network (i.e., self-pruned network) from the original network, which discards spurious features and shallow patterns while preserving sufficient information about the sentiment labels.
+- A self-pruning contrastive loss is devised to optimize these two networks, where representations learned by two networks are regarded as a semantically similar positive pair while representations of two different instances within a mini-batch are treated as a negative pair. 
 
 ## 🧩 Architecture
 <img src="/docs/cvib_frm_revise_v4_00.jpg" width = "85%" />
 CVIB is composed of an original network and a self-pruned network, where the self-pruned network is learned adaptively from the original network based on the VIB principle. The self-pruned network is expected to discard the spurious correlations between input features and output prediction, which is used for inference.
 
 ## 🎯 Main Results
-<img src="/docs/main_results.png" width = "90%" />
+<img src="/docs/main_results.png" width = "100%" />
 
 ## 🗂 Code & Data
 
@@ -46,7 +50,7 @@ Download [biaffine-dependency-parser-ptb-2020.04.06.tar.gz](https://storage.goog
 ### Data Pre-process
 - Code for data preprocessing can be found in [data_preprocess_raw.py](/data_preprocess_raw.py) (for REST15, REST16) and [data_preprocess_xml.py](/data_preprocess_xml.py) (for REST14, LAP14, MAMS and [ARTS](https://github.com/zhijing-jin/ARTS_TestSet)). 
 
-- The preprocessed data can be found in [ABSA_RGAT/](/ABSA_RGAT/). Also, we have provided the preprocessed data in [ABSA_Graph/](/ABSA_Graph/) (for choosing ASGCN-BERT as the backbone).
+- The preprocessed data can be found in [ABSA_RGAT/](/ABSA_RGAT/). Also, we have provided the preprocessed data in [ABSA_Graph/](/ABSA_Graph/) (if adopt ASGCN-BERT as the backbone).
 
 ### Training
 - Run the commands: ` bash train_xxx.sh `, e.g. run `bash train_res14.sh` to train with REST14 dataset.
@@ -68,4 +72,4 @@ url = {https://www.sciencedirect.com/science/article/pii/S095070512301050X}
 🤘Please cite our paper and kindly give a star if you find this repo helpful💡.
 
 ## Reference
-I'd like to express my gratitude to the contributors of the [RGAT-ABSA](https://github.com/songyouwei/ABSA-PyTorch) repo. It helps a lot! 👏👏
+I'd like to express my appreciate to contributors of the [RGAT-ABSA](https://github.com/songyouwei/ABSA-PyTorch) repo. It helps a lot👏!
