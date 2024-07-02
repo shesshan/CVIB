@@ -53,7 +53,7 @@ Download [biaffine-dependency-parser-ptb-2020.04.06.tar.gz](https://storage.goog
 - The preprocessed data can be found in [ABSA_RGAT/](/ABSA_RGAT/). Also, we have provided the preprocessed data in [ABSA_Graph/](/ABSA_Graph/) (if adopt ASGCN-BERT as the backbone).
 
 ### Training
-- Run the commands: ` bash train_xxx.sh `, e.g. run `bash train_res14.sh` to train with REST14 dataset.
+- Run the commands: ` bash train_xxx.sh `, e.g. run `bash train_res14.sh` to train our model with REST14 dataset.
 
 ## Citation
 ```bibtex
